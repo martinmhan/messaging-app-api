@@ -1,10 +1,13 @@
-import http from 'http'
+import http from 'http';
+import dotenv from 'dotenv';
 
-import app from './app'
+dotenv.config();
 
-const PORT = process.env.PORT || 8080
-const server = http.createServer(app)
+import app from './app';
+
+const PORT = process.env.PORT || 8080;
+const server = http.createServer(app);
 
 server.listen(PORT, () => {
-  console.log(`HTTP server listening at localhost: ${PORT}`)
-})
+  console.log(`HTTP server listening at localhost: ${PORT}`);
+});
