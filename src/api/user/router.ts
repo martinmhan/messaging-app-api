@@ -5,8 +5,8 @@ import User from '../../types/user';
 
 const loginUser = async (req: Request, res: Response): Promise<Response> => {
   const authorizationHeader: string = req.header('Authorization');
-  const userNamePassword: string = Buffer.from(authorizationHeader.replace('Basic ', ''), 'base64').toString();
-  const [userName, password] = userNamePassword.split(':');
+  const userNamePassword: string = Buffer.from(authorizationHeader?.replace('Basic ', ''), 'base64').toString();
+  const [userName, password] = userNamePassword?.split(':');
 
   const user = await User.find(userName);
 

@@ -50,7 +50,7 @@ BEGIN
     CREATE TABLE conversation (
       id INT NOT NULL AUTO_INCREMENT,
       created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      name_encrypted VARCHAR(255),
+      name BLOB,
       PRIMARY KEY(id)
     );
   END IF;
@@ -73,7 +73,7 @@ BEGIN
       created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       conversation_id INT NOT NULL,
       user_id INT NOT NULL,
-      message_encrypted VARCHAR(255) NOT NULL,
+      message BLOB NOT NULL,
       is_deleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY (id),
       FOREIGN KEY (conversation_id) REFERENCES conversation(id),

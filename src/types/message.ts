@@ -1,9 +1,9 @@
 class Message {
-  id: number;
-  conversationId: number;
-  senderId: number;
-  text: string;
-  createdDate: Date;
+  id: number | null = null;
+  conversationId: number | null = null;
+  userId: number | null = null;
+  text: string | null = null;
+  createdDate: Date | null = null;
 
   constructor(id: number) {
     this.id = id;
@@ -26,6 +26,6 @@ class Message {
   delete(): void {
     return;
   }
-};
+}
 
 export default Message;

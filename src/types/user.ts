@@ -1,11 +1,13 @@
 import runQuery from '../database/runQuery';
+import Conversation from './conversation';
 
 class User {
   id: number | null = null;
   userName: string | null = null;
-  password?: string | null = null;
-  firstName?: string | null = null;
-  lastName?: string | null = null;
+  password: string | null = null;
+  firstName: string | null = null;
+  lastName: string | null = null;
+  conversations: Array<Conversation> | null = null;
 
   constructor(id?: number) {
     if (id !== undefined) {
@@ -34,7 +36,7 @@ class User {
 
   async create(newUser: { userName: string; password: string; firstName: string; lastName: string }): Promise<User> {
     if (this.id !== null) {
-      return Promise.reject(new Error('User already exists'));
+      return Promise.reject(new Error('User already exists for this instance'));
     }
 
     const query = 'INSERT INTO user (user_name, password, first_name, last_name) VALUES (?, ?, ?, ?)';
@@ -68,15 +70,19 @@ class User {
       const query = 'SELECT * FROM user WHERE id = ?';
       const [user] = await runQuery(query, [this.id]);
 
+      if (!user) {
+        return Promise.reject(new Error(`User does not exist for id ${this.id}`));
+      }
+
       this.userName = user?.user_name?.toString();
       this.password = user?.password?.toString();
       this.firstName = user?.first_name?.toString();
       this.lastName = user?.last_name?.toString();
-    } catch (err) {
-      console.error('Error finding user');
-    }
 
-    return this;
+      return this;
+    } catch (err) {
+      return Promise.reject(new Error('Error finding user'));
+    }
   }
 
   async update(updateFields: { password?: string; firstName?: string; lastName?: string }): Promise<User> {
@@ -88,7 +94,7 @@ class User {
       const query = 'UPDATE user SET ? WHERE id = ?';
       await runQuery(query, [updateFields, this.id]);
     } catch (err) {
-      console.error('Error updating user');
+      return Promise.reject(new Error('Error updating user'));
     }
 
     return this.get();
@@ -110,6 +116,17 @@ class User {
     } catch (err) {
       console.error('Error deleting user');
     }
+  }
+
+  async getConversations(): Promise<Array<Conversation>> {
+    if (this.id === null) {
+      return [];
+    }
+
+    const conversations = await Conversation.find();
+    this.conversations = conversations;
+
+    return conversations;
   }
 }
 
