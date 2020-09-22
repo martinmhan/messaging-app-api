@@ -12,7 +12,7 @@ passport.use(
     },
     async (jwtPayload: { userId: number }, done: Function): Promise<void> => {
       const { userId } = jwtPayload;
-      const user = await User.findByUserId(userId);
+      const user = await User.findById(userId);
 
       if (!user) {
         return done(new Error('User could not be found'), false);
@@ -24,10 +24,11 @@ passport.use(
 );
 
 const authenticate = async (req: Request, res: Response, next: Function): Promise<void> => {
+  // JWT not required for login and signup
   const isJWTNotRequired =
-    req.originalUrl === '/api/test' ||
-    req.originalUrl === '/api/user/login' ||
-    (req.method === 'POST' && req.originalUrl === '/api/user');
+    (req.method === 'POST' && req.originalUrl === '/api/user/login') ||
+    (req.method === 'POST' && req.originalUrl === '/api/user') ||
+    req.originalUrl === '/api/test';
 
   if (isJWTNotRequired) {
     next();
