@@ -1,7 +1,7 @@
 {
-  "name": "guess-the-nba-player-api",
+  "name": "basic-messaging-app",
   "version": "1.0.0",
-  "repository": "https://github.com/martinmhan/guess-the-nba-player-api.git",
+  "repository": "https://github.com/martinmhan/basic-messaging-app.git",
   "author": "Martin Han <martin.m.han@gmail.com>",
   "license": "MIT",
   "scripts": {
@@ -14,7 +14,6 @@
     "test": "jest --forceExit --coverage --verbose --detectOpenHandles"
   },
   "dependencies": {
-    "@types/passport": "^1.0.4",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
@@ -39,6 +38,7 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/morgan": "^1.9.0",
     "@types/mysql": "^2.15.9",
+    "@types/passport": "^1.0.4",
     "@types/passport-jwt": "^3.0.3",
     "@types/supertest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "^2.23.0",
