@@ -15,6 +15,16 @@ class User {
     // Instantiation is restricted to static methods
   }
 
+  static constants = {
+    USER_DOES_NOT_EXIST: 'User does not exist',
+    ERROR_FINDING_USER: 'Error finding user',
+    ERROR_FINDING_USERS: 'Error finding users',
+    ERROR_CREATING_USER: 'Error creating user',
+    ERROR_UPDATING_USER: 'Error updating user',
+    ERROR_DELETING_USER: 'Error deleting user',
+    ERROR_FINDING_USER_CONVOS: 'Error finding user conversations',
+  };
+
   static mapTableRowToInstance(tableRow: UserSchema): User {
     if (!tableRow) {
       return null;
@@ -30,14 +40,31 @@ class User {
     return user;
   }
 
-  static async findByUserId(userId: number): Promise<User> {
+  static async create(newUser: {
+    userName: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }): Promise<User> {
+    // TO DO - hash/salt password
+    try {
+      const { insertId } = await mySQLDatabaseAccess.createUser(newUser);
+      const user = this.mapTableRowToInstance({ id: insertId, ...newUser });
+
+      return user;
+    } catch (error) {
+      return Promise.reject(User.constants.ERROR_CREATING_USER);
+    }
+  }
+
+  static async findById(userId: number): Promise<User> {
     try {
       const tableRow = await mySQLDatabaseAccess.getUserById(userId);
       const user = this.mapTableRowToInstance(tableRow);
 
       return user;
     } catch (error) {
-      return Promise.reject(new Error('Error finding user by userId'));
+      return Promise.reject(new Error(User.constants.ERROR_FINDING_USER));
     }
   }
 
@@ -49,7 +76,7 @@ class User {
       return user;
     } catch (error) {
       console.error(error);
-      return Promise.reject(new Error('Error finding user by userName'));
+      return Promise.reject(new Error(User.constants.ERROR_FINDING_USER));
     }
   }
 
@@ -60,28 +87,7 @@ class User {
 
       return users;
     } catch (error) {
-      return Promise.reject(new Error('Error finding users by conversationId'));
-    }
-  }
-
-  static async create(newUser: {
-    userName: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }): Promise<User> {
-    try {
-      const { insertId } = await mySQLDatabaseAccess.createUser(newUser);
-      const user = new User();
-      user.id = insertId;
-      user.userName = newUser.userName;
-      user.password = newUser.password;
-      user.firstName = newUser.firstName;
-      user.lastName = newUser.lastName;
-
-      return user;
-    } catch (error) {
-      return Promise.reject('Error creating user');
+      return Promise.reject(new Error(User.constants.ERROR_FINDING_USERS));
     }
   }
 
@@ -108,7 +114,7 @@ class User {
 
   async update(fieldsToUpdate: Partial<Omit<UserSchema, 'id' | 'userName'>>): Promise<User> {
     if (!this.id) {
-      return Promise.reject(new Error('User does not exist'));
+      return Promise.reject(new Error(User.constants.USER_DOES_NOT_EXIST));
     }
 
     try {
@@ -119,13 +125,13 @@ class User {
 
       return this;
     } catch (err) {
-      return Promise.reject(new Error('Error updating user'));
+      return Promise.reject(new Error(User.constants.ERROR_UPDATING_USER));
     }
   }
 
   async delete(): Promise<void> {
     if (!this.id) {
-      return Promise.reject(new Error('User does not exist'));
+      return Promise.reject(new Error(User.constants.USER_DOES_NOT_EXIST));
     }
 
     try {
@@ -136,22 +142,21 @@ class User {
       this.lastName = null;
       this.password = null;
     } catch (error) {
-      return Promise.reject(new Error('Error deleting user'));
+      return Promise.reject(new Error(User.constants.ERROR_DELETING_USER));
     }
   }
 
   async getConversations(): Promise<Array<Conversation>> {
     if (!this.id) {
-      return Promise.reject(new Error('Missing user ID'));
+      return Promise.reject(new Error(User.constants.USER_DOES_NOT_EXIST));
     }
 
     try {
-      const conversations = await Conversation.findByUserId(this.id);
-      this.conversations = conversations;
+      this.conversations = await Conversation.findByUserId(this.id);
 
-      return conversations;
+      return this.conversations;
     } catch (error) {
-      return Promise.reject(new Error('Error getting user conversations'));
+      return Promise.reject(new Error(User.constants.ERROR_FINDING_USER_CONVOS));
     }
   }
 }

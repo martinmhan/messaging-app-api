@@ -2,10 +2,10 @@ import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
 import { MessageSchema } from '../database/schema';
 
 class Message {
-  id: number | null = null;
-  conversationId: number | null = null;
-  userId: number | null = null;
-  text: string | null = null;
+  private id: number | null = null;
+  private conversationId: number | null = null;
+  private userId: number | null = null;
+  private text: string | null = null;
 
   private constructor() {
     // Instantiation is restricted to static methods
@@ -27,11 +27,7 @@ class Message {
 
   static async create(newMessage: Omit<MessageSchema, 'id'>): Promise<Message> {
     const { insertId } = await mySQLDatabaseAccess.createMessage(newMessage);
-    const message = new Message();
-    message.id = insertId;
-    message.conversationId = newMessage.conversationId;
-    message.userId = newMessage.userId;
-    message.text = newMessage.text;
+    const message = this.mapTableRowToInstance({ id: insertId, ...newMessage });
 
     return message;
   }
@@ -41,6 +37,22 @@ class Message {
     const messages = tableRows.map(this.mapTableRowToInstance);
 
     return messages;
+  }
+
+  getId(): number {
+    return this.id;
+  }
+
+  getConversationId(): number {
+    return this.conversationId;
+  }
+
+  getUserId(): number {
+    return this.userId;
+  }
+
+  getText(): string {
+    return this.text;
   }
 }
 
