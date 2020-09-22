@@ -1,3 +1,6 @@
+// TO DO - encrypt all text fields on inserts/updates
+// TO DO - decrypt all text fields on SELECTS
+
 // user queries
 const createUser = 'INSERT INTO user SET ?';
 const getUserById = 'SELECT * FROM user WHERE isDeleted = 0 AND id = ?';

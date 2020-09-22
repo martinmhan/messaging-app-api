@@ -7,16 +7,12 @@ const host: string = process.env.DB_HOST;
 const user: string = process.env.DB_USER;
 const password: string = process.env.DB_PASS;
 const database: string = process.env.DB_NAME;
+const encryptionKey: string = process.env.DB_ENC_KEY;
 
-if (!host || !user || !password || !database) {
-  throw new Error('Missing required database environment variable(s)');
+if (!host || !user || !password || !database || !encryptionKey) {
+  throw new Error('Missing required environment variable(s). Please edit your .env file');
 }
 
-/*
-  All database queries must go through this DAO class
-  Logic in this class should be simple and limited to running queries
-  Domain-level logic should be in their respective business object class
-*/
 class MySQLDatabaseAccess {
   connection: mysql.Connection;
 
@@ -49,7 +45,7 @@ class MySQLDatabaseAccess {
     });
   }
 
-  // ** User queries **
+  // User queries
   async createUser(newUser: Omit<UserSchema, 'id'>): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.createUser, [newUser]);
     return { insertId: insertResult.insertId };
@@ -78,7 +74,7 @@ class MySQLDatabaseAccess {
     await this.runQuery(queries.deleteUserById, [userId]);
   }
 
-  // ** Conversation queries **
+  // Conversation queries
   async createConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.createConversation, [newConversation]);
     return { insertId: insertResult.insertId };
@@ -105,7 +101,7 @@ class MySQLDatabaseAccess {
     await this.runQuery(queries.deleteConversation, [conversationId]);
   }
 
-  // ** Conversation User queries
+  // ConversationUser queries
   async createConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.createConversationUser, [{ conversationId, userId }]);
     return { insertId: insertResult.insertId };
@@ -115,7 +111,7 @@ class MySQLDatabaseAccess {
     await this.runQuery(queries.deleteConversationUser, [conversationId, userId]);
   }
 
-  // ** Message queries
+  // Message queries
   async createMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.createMessage, [newMessage]);
     return { insertId: insertResult.insertId };
