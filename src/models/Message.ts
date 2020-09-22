@@ -6,24 +6,24 @@ class Message {
   createdDate: Date | null = null;
 
   constructor(id: number) {
-    this.id = id;
-
-    return this.get();
+    if (id) {
+      this.id = id;
+    }
   }
 
-  create(text: string) {
+  async create(text: string): Promise<Message> {
     return this;
   }
 
-  get() {
+  async get(): Promise<Message> {
     return this;
   }
 
-  update() {
+  async update(): Promise<Message> {
     return this;
   }
 
-  delete(): void {
+  async delete(): Promise<void> {
     return;
   }
 }

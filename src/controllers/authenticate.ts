@@ -2,18 +2,17 @@ import { Request, Response } from 'express';
 import passport from 'passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
-import User from '../types/user';
+import User from '../models/User';
 
 passport.use(
   new Strategy(
     {
       secretOrKey: process.env.JWT_KEY,
-      passReqToCallback: true,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     },
-    async (req: Request, jwtPayload: { userId: number }, done: Function): Promise<void> => {
+    async (jwtPayload: { userId: number }, done: Function): Promise<void> => {
       const { userId } = jwtPayload;
-      const user = await new User(userId).get();
+      const user = await User.findByUserId(userId);
 
       if (!user) {
         return done(new Error('User could not be found'), false);
@@ -25,7 +24,10 @@ passport.use(
 );
 
 const authenticate = async (req: Request, res: Response, next: Function): Promise<void> => {
-  if (req.originalUrl === '/api/user/login') {
+  const isJWTNotRequired =
+    req.originalUrl === '/api/user/login' || (req.method === 'POST' && req.originalUrl === '/api/user');
+
+  if (isJWTNotRequired) {
     next();
   } else {
     passport.authenticate('jwt', { session: false })(req, res, next);

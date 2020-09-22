@@ -1,88 +1,98 @@
-DROP PROCEDURE IF EXISTS create_initial_tables;
+DROP PROCEDURE IF EXISTS createInitialTables;
 
 DELIMITER $$
 
-CREATE PROCEDURE create_initial_tables()
+CREATE PROCEDURE createInitialTables()
 BEGIN
-  DECLARE user_table_count INT;
-  DECLARE conversation_table_count INT;
-  DECLARE conversation_user_table_count INT;
-  DECLARE message_table_count INT;
+  DECLARE userTableCount INT;
+  DECLARE conversationTableCount INT;
+  DECLARE conversationUserTableCount INT;
+  DECLARE messageTableCount INT;
 
-  SET user_table_count = (
+  SET userTableCount = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_NAME = 'user'
+    WHERE
+		  TABLE_SCHEMA = DATABASE() AND
+      TABLE_NAME = 'user'
   );
 
-  SET conversation_table_count = (
+  SET conversationTableCount = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_NAME = 'conversation'
+    WHERE
+		  TABLE_SCHEMA = DATABASE() AND
+      TABLE_NAME = 'conversation'
   );
 
-  SET conversation_user_table_count = (
+  SET conversationUserTableCount = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_NAME = 'conversation_user'
+    WHERE
+		  TABLE_SCHEMA = DATABASE() AND
+      TABLE_NAME = 'conversationUser'
   );
 
-  SET message_table_count = (
+  SET messageTableCount = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_NAME = 'message'
+    WHERE
+		  TABLE_SCHEMA = DATABASE() AND
+		  TABLE_NAME = 'message'
   );
 
-  IF user_table_count = 0 THEN
+  IF userTableCount = 0 THEN
     CREATE TABLE user (
       id INT NOT NULL AUTO_INCREMENT,
-      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      user_name BLOB UNIQUE,
+      createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      modifiedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      userName VARCHAR(255) UNIQUE,
       password BLOB,
-      first_name BLOB,
-      last_name BLOB,
+      firstName BLOB,
+      lastName BLOB,
+      isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY(id)
     );
   END IF;
 
-  IF conversation_table_count = 0 THEN
+  IF conversationTableCount = 0 THEN
     CREATE TABLE conversation (
       id INT NOT NULL AUTO_INCREMENT,
-      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       name BLOB,
+      isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY(id)
     );
   END IF;
 
-  IF conversation_user_table_count = 0 THEN
-    CREATE TABLE conversation_user (
+  IF conversationUserTableCount = 0 THEN
+    CREATE TABLE conversationUser (
       id INT NOT NULL AUTO_INCREMENT,
-      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      conversation_id INT NOT NULL,
-      user_id INT NOT NULL,
+      createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      conversationId INT NOT NULL,
+      userId INT NOT NULL,
       PRIMARY KEY (id),
-      FOREIGN KEY (conversation_id) REFERENCES conversation(id),
-      FOREIGN KEY (user_id) REFERENCES user(id),
+      FOREIGN KEY (conversationId) REFERENCES conversation(id),
+      FOREIGN KEY (userId) REFERENCES user(id)
     );
   END IF;
 
-  IF message_table_count = 0 THEN
+  IF messageTableCount = 0 THEN
     CREATE TABLE message (
       id INT NOT NULL AUTO_INCREMENT,
-      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      conversation_id INT NOT NULL,
-      user_id INT NOT NULL,
+      createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      conversationId INT NOT NULL,
+      userId INT NOT NULL,
       message BLOB NOT NULL,
-      is_deleted BOOLEAN DEFAULT FALSE,
+      isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY (id),
-      FOREIGN KEY (conversation_id) REFERENCES conversation(id),
-      FOREIGN KEY (user_id) REFERENCES user(id)
+      FOREIGN KEY (conversationId) REFERENCES conversation(id),
+      FOREIGN KEY (userId) REFERENCES user(id)
     );
   END IF;
 END $$
 
 DELIMITER ;
 
-CALL create_initial_tables();
-DROP PROCEDURE IF EXISTS create_initial_tables;
+CALL createInitialTables();
+DROP PROCEDURE IF EXISTS createInitialTables;
