@@ -71,6 +71,7 @@ BEGIN
       createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       conversationId INT NOT NULL,
       userId INT NOT NULL,
+      isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY (id),
       FOREIGN KEY (conversationId) REFERENCES conversation(id),
       FOREIGN KEY (userId) REFERENCES user(id)
@@ -83,7 +84,7 @@ BEGIN
       createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       conversationId INT NOT NULL,
       userId INT NOT NULL,
-      message BLOB NOT NULL,
+      text BLOB NOT NULL,
       isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY (id),
       FOREIGN KEY (conversationId) REFERENCES conversation(id),

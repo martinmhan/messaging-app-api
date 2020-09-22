@@ -13,4 +13,7 @@ export interface ConversationSchema {
 
 export interface MessageSchema {
   id: number;
+  conversationId: number;
+  userId: number;
+  text: string;
 }

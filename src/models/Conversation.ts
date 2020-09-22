@@ -1,4 +1,5 @@
-import mySqlDatabase from '../database/mySQLDatabaseAccess';
+import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import { ConversationSchema } from '../database/schema';
 import User from './User';
 import Message from './Message';
 
@@ -10,38 +11,50 @@ class Conversation {
   private users: Array<User> = [];
   private messages: Array<Message> = [];
 
-  constructor(id?: number) {
-    if (id !== undefined) {
-      this.id = id;
-    }
+  private constructor() {
+    // Instantiation is restricted to static methods
   }
 
-  static mapDatabaseRowItemToInstance(
-    rowItem: { id: number; name: string },
-    conversationInstance?: Conversation,
-  ): Conversation {
-    const conversation = conversationInstance || new Conversation();
-    conversation.id = rowItem?.id;
-    conversation.name = rowItem?.name?.toString();
+  static mapTableRowToInstance(tableRow: ConversationSchema): Conversation {
+    if (!tableRow) {
+      return null;
+    }
+
+    const conversation = new Conversation();
+    conversation.id = tableRow?.id;
+    conversation.name = tableRow?.name?.toString();
 
     return conversation;
   }
 
+  static async create(newConversation: Omit<ConversationSchema, 'id'>): Promise<Conversation> {
+    try {
+      const { insertId } = await mySQLDatabaseAccess.createConversation(newConversation);
+      const conversation = new Conversation();
+      conversation.id = insertId;
+      conversation.name = newConversation.name;
+
+      return conversation;
+    } catch (error) {
+      return Promise.reject(new Error('Error creating conversation'));
+    }
+  }
+
+  static async findByConversationId(conversationId: number): Promise<Conversation> {
+    try {
+      const tableRow = await mySQLDatabaseAccess.getConversationById(conversationId);
+      const conversation = this.mapTableRowToInstance(tableRow);
+
+      return conversation;
+    } catch (error) {
+      return Promise.reject(new Error('Error finding conversation'));
+    }
+  }
+
   static async findByUserId(userId: number): Promise<Array<Conversation>> {
     try {
-      const query = `
-        SELECT *
-        FROM conversation
-        WHERE id IN (
-          SELECT DISTINCT conversation_id
-          WHERE user_id = ?
-        )
-      `;
-
-      const rowItems = await mySqlDatabase.runQuery(query, [userId]);
-      const conversations = rowItems.map((rowItem: { id: number; name: string }) =>
-        this.mapDatabaseRowItemToInstance(rowItem),
-      );
+      const tableRows = await mySQLDatabaseAccess.getConversationsByUserId(userId);
+      const conversations = tableRows.map(this.mapTableRowToInstance);
 
       return conversations;
     } catch (error) {
@@ -61,50 +74,68 @@ class Conversation {
     return this.messageIds;
   }
 
-  async create(conversationName: string, userIds: Array<number>): Promise<Conversation> {
-    if (this.id) {
-      return Promise.reject(new Error('Conversation id already provided. Use .get() to retrieve this conversation'));
+  async update(fieldsToUpdate: Partial<Omit<ConversationSchema, 'id'>>): Promise<Conversation> {
+    if (!this.id) {
+      return Promise.reject(new Error('Conversation does not exist'));
     }
 
     try {
-      const query = 'INSERT INTO conversation (name) VALUES (?)';
-      const conversationInsertResult = await mySqlDatabase.runQuery(query, [conversationName]);
-
-      this.id = conversationInsertResult.insertId;
-      this.name = conversationName;
+      await mySQLDatabaseAccess.updateConversation(fieldsToUpdate, this.id);
+      this.name = fieldsToUpdate.name || this.name;
 
       return this;
     } catch (error) {
-      return Promise.reject(new Error('Error creating conversation'));
+      return Promise.reject(new Error('Error updating conversation'));
     }
-  }
-
-  async get(): Promise<Conversation> {
-    if (!this.id) {
-      return Promise.reject(new Error('Conversation id is missing'));
-    }
-
-    const query = 'SELECT * FROM conversation WHERE id = ?';
-    const [rowItem] = await mySqlDatabase.runQuery(query, [this.id]);
-
-    return Conversation.mapDatabaseRowItemToInstance(rowItem, this);
-  }
-
-  async update(): Promise<Conversation> {
-    return this;
   }
 
   async delete(): Promise<void> {
-    return;
+    if (!this.id) {
+      return Promise.reject(new Error('Conversation does not exist'));
+    }
+
+    try {
+      await mySQLDatabaseAccess.deleteConversation(this.id);
+      this.id = null;
+      this.name = null;
+    } catch (error) {
+      return Promise.reject(new Error('Error deleting conversation'));
+    }
   }
 
-  async addUsers(userIds: Array<number>): Promise<void> {
-    // insert into conversation_users table
-    return;
+  async addUser(userId: number): Promise<void> {
+    if (!this.id) {
+      return Promise.reject(new Error('Conversation does not exist'));
+    }
+
+    try {
+      await mySQLDatabaseAccess.createConversationUser(this.id, userId);
+    } catch (error) {
+      return Promise.reject(new Error('Error adding user to conversation'));
+    }
   }
 
-  async removeUsers(userIds: Array<number>): Promise<void> {
-    return;
+  async removeUser(userId: number): Promise<void> {
+    if (!this.id) {
+      return Promise.reject(new Error('Conversation does not exist'));
+    }
+
+    try {
+      await mySQLDatabaseAccess.deleteConversationUser(this.id, userId);
+    } catch (error) {
+      return Promise.reject(new Error('Error removing user from conversation'));
+    }
+  }
+
+  async getMessages(): Promise<Array<Message>> {
+    if (!this.id) {
+      return Promise.reject(new Error('Conversation does not exist'));
+    }
+
+    const messages = await Message.findByConversationId(this.id);
+    this.messages = messages;
+
+    return messages;
   }
 }
 

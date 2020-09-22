@@ -11,32 +11,29 @@ class User {
   private conversationIds: Array<number> = [];
   private conversations: Array<Conversation> = [];
 
-  // TO DO: remove password field and add a comparePassword method that checks against password hash
-
   private constructor() {
     // Instantiation is restricted to static methods
   }
 
-  // handles logic converting a DB row to user instance
-  static mapRowItemToUserInstance(userRowItem: UserSchema): User {
-    if (!userRowItem) {
+  static mapTableRowToInstance(tableRow: UserSchema): User {
+    if (!tableRow) {
       return null;
     }
 
     const user = new User();
-    user.id = userRowItem?.id;
-    user.userName = userRowItem?.userName?.toString();
-    user.password = userRowItem?.password?.toString();
-    user.firstName = userRowItem?.firstName?.toString();
-    user.lastName = userRowItem?.lastName?.toString();
+    user.id = tableRow?.id;
+    user.userName = tableRow?.userName?.toString();
+    user.password = tableRow?.password?.toString();
+    user.firstName = tableRow?.firstName?.toString();
+    user.lastName = tableRow?.lastName?.toString();
 
     return user;
   }
 
   static async findByUserId(userId: number): Promise<User> {
     try {
-      const userRowItem = await mySQLDatabaseAccess.getUserByUserId(userId);
-      const user = this.mapRowItemToUserInstance(userRowItem);
+      const tableRow = await mySQLDatabaseAccess.getUserById(userId);
+      const user = this.mapTableRowToInstance(tableRow);
 
       return user;
     } catch (error) {
@@ -46,8 +43,8 @@ class User {
 
   static async findByUserName(userName: string): Promise<User> {
     try {
-      const userRowItem = await mySQLDatabaseAccess.getUserByUserName(userName);
-      const user = this.mapRowItemToUserInstance(userRowItem);
+      const tableRow = await mySQLDatabaseAccess.getUserByUserName(userName);
+      const user = this.mapTableRowToInstance(tableRow);
 
       return user;
     } catch (error) {
@@ -58,8 +55,8 @@ class User {
 
   static async findByConversationId(conversationId: number): Promise<Array<User>> {
     try {
-      const userRowItems = await mySQLDatabaseAccess.getUsersByConversationId(conversationId);
-      const users = userRowItems.map((rowItem: UserSchema) => this.mapRowItemToUserInstance(rowItem));
+      const tableRows = await mySQLDatabaseAccess.getUsersByConversationId(conversationId);
+      const users = tableRows.map(this.mapTableRowToInstance);
 
       return users;
     } catch (error) {
@@ -105,6 +102,7 @@ class User {
   }
 
   validatePassword(passwordToValidate: string): boolean {
+    // TO DO - hash passwordToValidate and compare against hashed/salted password in DB
     return passwordToValidate === this.password;
   }
 
@@ -115,7 +113,6 @@ class User {
 
     try {
       await mySQLDatabaseAccess.updateUser(fieldsToUpdate, this.id);
-
       this.password = fieldsToUpdate.password || this.password;
       this.firstName = fieldsToUpdate.firstName || this.firstName;
       this.lastName = fieldsToUpdate.lastName || this.lastName;
@@ -127,6 +124,10 @@ class User {
   }
 
   async delete(): Promise<void> {
+    if (!this.id) {
+      return Promise.reject(new Error('User does not exist'));
+    }
+
     try {
       await mySQLDatabaseAccess.deleteUser(this.id);
 

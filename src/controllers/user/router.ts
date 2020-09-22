@@ -90,20 +90,20 @@ const updateUser = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-const getConversations = async (req: Request, res: Response): Promise<Response> => {
-  return res.status(200).send('hiya');
-};
-
 const deleteUser = async (req: Request, res: Response): Promise<Response> => {
   return res.status(200).send('hi');
 };
 
+const getConversations = async (req: Request, res: Response): Promise<Response> => {
+  return res.status(200).send('hiya');
+};
+
 const router = Router();
+router.post('/login', loginUser);
 router.post('/', createUser);
 router.get('/:userId', getUser);
 router.patch('/:userId', updateUser);
 router.delete('/:userId', deleteUser);
-router.post('/login', loginUser);
-router.get('/conversations', getConversations);
+router.get('/:userId/conversations', getConversations);
 
 export default router;
