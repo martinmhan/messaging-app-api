@@ -26,17 +26,23 @@ class Message {
   }
 
   static async create(newMessage: Omit<MessageSchema, 'id'>): Promise<Message> {
-    const { insertId } = await mySQLDatabaseAccess.createMessage(newMessage);
-    const message = this.mapTableRowToInstance({ id: insertId, ...newMessage });
-
-    return message;
+    try {
+      const { insertId } = await mySQLDatabaseAccess.createMessage(newMessage);
+      const message = this.mapTableRowToInstance({ id: insertId, ...newMessage });
+      return message;
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   static async findByConversationId(conversationId: number): Promise<Array<Message>> {
-    const tableRows = await mySQLDatabaseAccess.getMessagesByConversationId(conversationId);
-    const messages = tableRows.map(this.mapTableRowToInstance);
-
-    return messages;
+    try {
+      const tableRows = await mySQLDatabaseAccess.getMessagesByConversationId(conversationId);
+      const messages = tableRows.map(this.mapTableRowToInstance);
+      return messages;
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   getId(): number {

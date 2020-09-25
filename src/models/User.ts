@@ -1,14 +1,16 @@
 import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
 import { UserSchema } from '../database/schema';
+import { encrypt, decrypt, createSalt, hashAndSaltPassword } from '../utils/encryption';
 import Conversation from './Conversation';
 
 class User {
   private id: number | null = null;
   private userName: string | null = null;
-  private password: string | null = null;
   private firstName: string | null = null;
   private lastName: string | null = null;
-  private conversationIds: Array<number> = [];
+  private email: string | null = null;
+  private passwordHash: string | null = null;
+  private passwordSalt: string | null = null;
   private conversations: Array<Conversation> = [];
 
   private constructor() {
@@ -17,12 +19,6 @@ class User {
 
   static constants = {
     USER_DOES_NOT_EXIST: 'User does not exist',
-    ERROR_FINDING_USER: 'Error finding user',
-    ERROR_FINDING_USERS: 'Error finding users',
-    ERROR_CREATING_USER: 'Error creating user',
-    ERROR_UPDATING_USER: 'Error updating user',
-    ERROR_DELETING_USER: 'Error deleting user',
-    ERROR_FINDING_USER_CONVOS: 'Error finding user conversations',
   };
 
   static mapTableRowToInstance(tableRow: UserSchema): User {
@@ -32,28 +28,37 @@ class User {
 
     const user = new User();
     user.id = tableRow?.id;
-    user.userName = tableRow?.userName?.toString();
-    user.password = tableRow?.password?.toString();
-    user.firstName = tableRow?.firstName?.toString();
-    user.lastName = tableRow?.lastName?.toString();
+    user.userName = decrypt(tableRow?.userName?.toString());
+    user.firstName = decrypt(tableRow?.firstName?.toString());
+    user.lastName = decrypt(tableRow?.lastName?.toString());
+    user.email = decrypt(tableRow?.email?.toString());
+    user.passwordHash = tableRow?.passwordHash?.toString();
+    user.passwordSalt = tableRow?.passwordSalt?.toString();
 
     return user;
   }
 
-  static async create(newUser: {
-    userName: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }): Promise<User> {
-    // TO DO - hash/salt password
+  static async create(
+    newUser: Omit<UserSchema, 'id' | 'passwordHash' | 'passwordSalt'> & { password: string },
+  ): Promise<User> {
     try {
-      const { insertId } = await mySQLDatabaseAccess.createUser(newUser);
-      const user = this.mapTableRowToInstance({ id: insertId, ...newUser });
+      const passwordSalt = createSalt();
+      const passwordHash = hashAndSaltPassword(newUser.password, passwordSalt);
+      const insert = {
+        userName: encrypt(newUser.userName),
+        firstName: encrypt(newUser.firstName),
+        lastName: encrypt(newUser.lastName),
+        email: encrypt(newUser.email),
+        passwordHash,
+        passwordSalt,
+      };
+
+      const { insertId } = await mySQLDatabaseAccess.insertUser(insert);
+      const user = this.mapTableRowToInstance({ id: insertId, ...insert });
 
       return user;
     } catch (error) {
-      return Promise.reject(User.constants.ERROR_CREATING_USER);
+      return Promise.reject(error);
     }
   }
 
@@ -64,19 +69,18 @@ class User {
 
       return user;
     } catch (error) {
-      return Promise.reject(new Error(User.constants.ERROR_FINDING_USER));
+      return Promise.reject(error);
     }
   }
 
   static async findByUserName(userName: string): Promise<User> {
     try {
-      const tableRow = await mySQLDatabaseAccess.getUserByUserName(userName);
+      const tableRow = await mySQLDatabaseAccess.getUserByUserName(encrypt(userName));
       const user = this.mapTableRowToInstance(tableRow);
 
       return user;
     } catch (error) {
-      console.error(error);
-      return Promise.reject(new Error(User.constants.ERROR_FINDING_USER));
+      return Promise.reject(error);
     }
   }
 
@@ -87,7 +91,7 @@ class User {
 
       return users;
     } catch (error) {
-      return Promise.reject(new Error(User.constants.ERROR_FINDING_USERS));
+      return Promise.reject(error);
     }
   }
 
@@ -107,48 +111,88 @@ class User {
     return this.lastName;
   }
 
-  validatePassword(passwordToValidate: string): boolean {
-    // TO DO - hash passwordToValidate and compare against hashed/salted password in DB
-    return passwordToValidate === this.password;
+  getEmail(): string {
+    return this.email;
   }
 
-  async update(fieldsToUpdate: Partial<Omit<UserSchema, 'id' | 'userName'>>): Promise<User> {
+  truncate(): { id: number; userName: string; firstName: string; lastName: string; email: string } {
+    return {
+      id: this.id,
+      userName: this.userName,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      email: this.email,
+    };
+  }
+
+  validatePassword(passwordAttempt: string): boolean {
+    const passwordAttemptHash = hashAndSaltPassword(passwordAttempt, this.passwordSalt);
+    return passwordAttemptHash === this.passwordHash;
+  }
+
+  async update(fieldsToUpdate: { firstName?: string; lastName?: string }): Promise<User> {
     if (!this.id) {
-      return Promise.reject(new Error(User.constants.USER_DOES_NOT_EXIST));
+      return Promise.reject(User.constants.USER_DOES_NOT_EXIST);
     }
 
     try {
-      await mySQLDatabaseAccess.updateUser(fieldsToUpdate, this.id);
-      this.password = fieldsToUpdate.password || this.password;
+      const fieldsToUpdateEncrypted: { firstName?: string; lastName?: string } = {};
+      if (fieldsToUpdate.firstName) {
+        fieldsToUpdateEncrypted.firstName = encrypt(fieldsToUpdate.firstName);
+      }
+
+      if (fieldsToUpdate.lastName) {
+        fieldsToUpdateEncrypted.lastName = encrypt(fieldsToUpdate.lastName);
+      }
+
+      await mySQLDatabaseAccess.updateUser(fieldsToUpdateEncrypted, this.id);
       this.firstName = fieldsToUpdate.firstName || this.firstName;
       this.lastName = fieldsToUpdate.lastName || this.lastName;
 
       return this;
-    } catch (err) {
-      return Promise.reject(new Error(User.constants.ERROR_UPDATING_USER));
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    if (!this.id) {
+      return Promise.reject(User.constants.USER_DOES_NOT_EXIST);
+    }
+
+    try {
+      const newPasswordHash = hashAndSaltPassword(newPassword, this.passwordSalt);
+      await mySQLDatabaseAccess.updateUser({ passwordHash: newPasswordHash }, this.id);
+      this.passwordHash = newPasswordHash;
+    } catch (error) {
+      return Promise.reject(error);
     }
   }
 
   async delete(): Promise<void> {
     if (!this.id) {
-      return Promise.reject(new Error(User.constants.USER_DOES_NOT_EXIST));
+      return Promise.reject(User.constants.USER_DOES_NOT_EXIST);
     }
 
     try {
-      await mySQLDatabaseAccess.deleteUser(this.id);
+      await Promise.all([
+        mySQLDatabaseAccess.deleteUser(this.id),
+        mySQLDatabaseAccess.deleteConversationUsersByUserId(this.id),
+      ]);
 
       this.id = null;
       this.firstName = null;
       this.lastName = null;
-      this.password = null;
+      this.passwordHash = null;
+      this.passwordSalt = null;
     } catch (error) {
-      return Promise.reject(new Error(User.constants.ERROR_DELETING_USER));
+      return Promise.reject(error);
     }
   }
 
   async getConversations(): Promise<Array<Conversation>> {
     if (!this.id) {
-      return Promise.reject(new Error(User.constants.USER_DOES_NOT_EXIST));
+      return Promise.reject(User.constants.USER_DOES_NOT_EXIST);
     }
 
     try {
@@ -156,7 +200,7 @@ class User {
 
       return this.conversations;
     } catch (error) {
-      return Promise.reject(new Error(User.constants.ERROR_FINDING_USER_CONVOS));
+      return Promise.reject(error);
     }
   }
 }

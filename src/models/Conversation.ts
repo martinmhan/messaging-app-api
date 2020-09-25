@@ -1,15 +1,14 @@
 import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
-import { ConversationSchema } from '../database/schema';
+import { MessageSchema, ConversationSchema } from '../database/schema';
+import { encrypt, decrypt } from '../utils/encryption';
 import User from './User';
 import Message from './Message';
 
 class Conversation {
   private id: number | null = null;
   private name: string | null = null;
-  private userIds: Array<number> = [];
-  private messageIds: Array<number> = [];
-  private users: Array<User> = [];
-  private messages: Array<Message> = [];
+  private users: Array<User> | null = null;
+  private messages: Array<Message> | null = null;
 
   private constructor() {
     // Instantiation is restricted to static methods
@@ -17,12 +16,6 @@ class Conversation {
 
   static constants = {
     CONVO_DOES_NOT_EXIST: 'Conversation does not exist',
-    ERROR_CREATING_CONVO: 'Error creating conversation',
-    ERROR_FINDING_CONVO: 'Error finding conversation',
-    ERROR_UPDATING_CONVO: 'Error updating conversation',
-    ERROR_DELETING_CONVO: 'Error deleting conversation',
-    ERROR_ADDING_USER: 'Error adding user to conversation',
-    ERROR_REMOVING_USER: 'Error removing user from conversation',
   };
 
   static mapTableRowToInstance(tableRow: ConversationSchema): Conversation {
@@ -32,19 +25,20 @@ class Conversation {
 
     const conversation = new Conversation();
     conversation.id = tableRow?.id;
-    conversation.name = tableRow?.name?.toString();
+    conversation.name = decrypt(tableRow?.name?.toString());
 
     return conversation;
   }
 
   static async create(newConversation: Omit<ConversationSchema, 'id'>): Promise<Conversation> {
     try {
-      const { insertId } = await mySQLDatabaseAccess.createConversation(newConversation);
-      const conversation = this.mapTableRowToInstance({ id: insertId, ...newConversation });
+      const insert = { name: encrypt(newConversation.name) };
+      const { insertId } = await mySQLDatabaseAccess.createConversation(insert);
+      const conversation = this.mapTableRowToInstance({ id: insertId, ...insert });
 
       return conversation;
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_CREATING_CONVO));
+      return Promise.reject(error);
     }
   }
 
@@ -55,7 +49,7 @@ class Conversation {
 
       return conversation;
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_FINDING_CONVO));
+      return Promise.reject(error);
     }
   }
 
@@ -66,20 +60,16 @@ class Conversation {
 
       return conversations;
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_FINDING_CONVO));
+      return Promise.reject(error);
     }
+  }
+
+  getId(): number {
+    return this.id;
   }
 
   getName(): string {
     return this.name;
-  }
-
-  async getUserIds(): Promise<Array<number>> {
-    return this.userIds;
-  }
-
-  async getMessageIds(): Promise<Array<number>> {
-    return this.messageIds;
   }
 
   async update(fieldsToUpdate: Partial<Omit<ConversationSchema, 'id'>>): Promise<Conversation> {
@@ -88,27 +78,36 @@ class Conversation {
     }
 
     try {
-      await mySQLDatabaseAccess.updateConversation(fieldsToUpdate, this.id);
+      const fieldsToUpdateEncrypted: { name: string } = { name: encrypt(fieldsToUpdate.name) };
+      await mySQLDatabaseAccess.updateConversation(fieldsToUpdateEncrypted, this.id);
       this.name = fieldsToUpdate.name || this.name;
 
       return this;
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_UPDATING_CONVO));
+      return Promise.reject(error);
     }
   }
 
-  async delete(): Promise<void> {
+  async getUsers(): Promise<Array<User>> {
     if (!this.id) {
       return Promise.reject(new Error(Conversation.constants.CONVO_DOES_NOT_EXIST));
     }
 
     try {
-      await mySQLDatabaseAccess.deleteConversation(this.id);
-      this.id = null;
-      this.name = null;
+      this.users = await User.findByConversationId(this.id);
+      return this.users;
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_DELETING_CONVO));
+      return Promise.reject(error);
     }
+  }
+
+  async checkIfHasUser(userId: number): Promise<boolean> {
+    if (this.users === null) {
+      await this.getUsers();
+    }
+
+    const conversationMemberIds = this.users.map(user => user.getId());
+    return conversationMemberIds.includes(userId);
   }
 
   async addUser(userId: number): Promise<void> {
@@ -119,7 +118,7 @@ class Conversation {
     try {
       await mySQLDatabaseAccess.createConversationUser(this.id, userId);
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_ADDING_USER));
+      return Promise.reject(error);
     }
   }
 
@@ -131,7 +130,7 @@ class Conversation {
     try {
       await mySQLDatabaseAccess.deleteConversationUser(this.id, userId);
     } catch (error) {
-      return Promise.reject(new Error(Conversation.constants.ERROR_REMOVING_USER));
+      return Promise.reject(error);
     }
   }
 
@@ -140,10 +139,26 @@ class Conversation {
       return Promise.reject(new Error(Conversation.constants.CONVO_DOES_NOT_EXIST));
     }
 
-    const messages = await Message.findByConversationId(this.id);
-    this.messages = messages;
+    try {
+      const messages = await Message.findByConversationId(this.id);
+      this.messages = messages;
+      return messages;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
 
-    return messages;
+  async createMessage(message: Omit<MessageSchema, 'id'>): Promise<Message> {
+    if (!this.id) {
+      return Promise.reject(new Error(Conversation.constants.CONVO_DOES_NOT_EXIST));
+    }
+
+    try {
+      const newMessage = await Message.create(message);
+      return newMessage;
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 }
 
