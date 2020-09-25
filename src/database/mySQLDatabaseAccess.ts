@@ -7,10 +7,9 @@ const host: string = process.env.DB_HOST;
 const user: string = process.env.DB_USER;
 const password: string = process.env.DB_PASS;
 const database: string = process.env.DB_NAME;
-const encryptionKey: string = process.env.DB_ENC_KEY;
 
-if (!host || !user || !password || !database || !encryptionKey) {
-  throw new Error('Missing required environment variable(s). Please edit your .env file');
+if (!host || !user || !password || !database) {
+  throw new Error('Missing required environment variable(s). Please edit .env file');
 }
 
 class MySQLDatabaseAccess {
@@ -46,24 +45,24 @@ class MySQLDatabaseAccess {
   }
 
   // User queries
-  async createUser(newUser: Omit<UserSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.createUser, [newUser]);
+  async insertUser(newUser: Omit<UserSchema, 'id'>): Promise<{ insertId: number }> {
+    const insertResult = await this.runQuery(queries.insertUser, [newUser]);
     return { insertId: insertResult.insertId };
   }
 
   async getUserById(userId: number): Promise<UserSchema> {
-    const [userRowItem] = await this.runQuery(queries.getUserById, [userId]);
-    return userRowItem;
+    const [userRow] = await this.runQuery(queries.getUserById, [userId]);
+    return userRow;
   }
 
   async getUserByUserName(userName: string): Promise<UserSchema> {
-    const [userRowItem] = await this.runQuery(queries.getUserByUserName, [userName]);
-    return userRowItem;
+    const [userRow] = await this.runQuery(queries.getUserByUserName, [userName]);
+    return userRow;
   }
 
   async getUsersByConversationId(conversationId: number): Promise<Array<UserSchema>> {
-    const userRowItems = await this.runQuery(queries.getUsersByConversationId, [conversationId]);
-    return userRowItems;
+    const userRows = await this.runQuery(queries.getUsersByConversationId, [conversationId]);
+    return userRows;
   }
 
   async updateUser(fieldsToUpdate: Partial<Omit<UserSchema, 'id' | 'userName'>>, userId: number): Promise<void> {
@@ -76,18 +75,18 @@ class MySQLDatabaseAccess {
 
   // Conversation queries
   async createConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.createConversation, [newConversation]);
+    const insertResult = await this.runQuery(queries.insertConversation, [newConversation]);
     return { insertId: insertResult.insertId };
   }
 
   async getConversationById(conversationId: number): Promise<ConversationSchema> {
-    const [conversationRowItem] = await this.runQuery(queries.getConversationById, [conversationId]);
-    return conversationRowItem;
+    const [conversationRow] = await this.runQuery(queries.getConversationById, [conversationId]);
+    return conversationRow;
   }
 
   async getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>> {
-    const conversationRowItems = await this.runQuery(queries.getConversationsByUserId, [userId]);
-    return conversationRowItems;
+    const conversationRows = await this.runQuery(queries.getConversationsByUserId, [userId]);
+    return conversationRows;
   }
 
   async updateConversation(
@@ -103,7 +102,7 @@ class MySQLDatabaseAccess {
 
   // ConversationUser queries
   async createConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.createConversationUser, [{ conversationId, userId }]);
+    const insertResult = await this.runQuery(queries.insertConversationUser, [{ conversationId, userId }]);
     return { insertId: insertResult.insertId };
   }
 
@@ -111,9 +110,13 @@ class MySQLDatabaseAccess {
     await this.runQuery(queries.deleteConversationUser, [conversationId, userId]);
   }
 
+  async deleteConversationUsersByUserId(userId: number): Promise<void> {
+    await this.runQuery(queries.deleteConversationUsersByUserId, [userId]);
+  }
+
   // Message queries
   async createMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.createMessage, [newMessage]);
+    const insertResult = await this.runQuery(queries.insertMessage, [newMessage]);
     return { insertId: insertResult.insertId };
   }
 

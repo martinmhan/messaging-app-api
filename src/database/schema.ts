@@ -5,9 +5,11 @@ export interface Schema {
 export interface UserSchema extends Schema {
   id: number;
   userName: string;
-  password: string;
   firstName: string;
   lastName: string;
+  email: string;
+  passwordHash: string;
+  passwordSalt: string;
 }
 
 export interface ConversationSchema extends Schema {
