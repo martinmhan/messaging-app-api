@@ -44,14 +44,16 @@ BEGIN
   IF userTableCount = 0 THEN
     CREATE TABLE user (
       id INT NOT NULL AUTO_INCREMENT,
-      createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      modifiedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      userName VARCHAR(255) UNIQUE,
-      password BLOB,
-      firstName BLOB,
-      lastName BLOB,
-      isDeleted BOOLEAN DEFAULT FALSE,
-      PRIMARY KEY(id)
+      createdDate TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      modifiedDate TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      userName VARCHAR(255) NOT NULL,
+      firstName VARCHAR(255) NOT NULL,
+      lastName VARCHAR(255) NOT NULL,
+      passwordHash BLOB NOT NULL,
+      passwordSalt BLOB NOT NULL,
+      deletedOn INT NOT NULL DEFAULT 0,
+      PRIMARY KEY(id),
+      UNIQUE KEY (userName, deletedOn)
     );
   END IF;
 
@@ -59,8 +61,8 @@ BEGIN
     CREATE TABLE conversation (
       id INT NOT NULL AUTO_INCREMENT,
       createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      name BLOB,
-      isDeleted BOOLEAN DEFAULT FALSE,
+      name VARCHAR(255) NOT NULL,
+      isDeleted BOOLEAN NOT NULL DEFAULT FALSE,
       PRIMARY KEY(id)
     );
   END IF;
@@ -71,10 +73,10 @@ BEGIN
       createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       conversationId INT NOT NULL,
       userId INT NOT NULL,
-      isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY (id),
       FOREIGN KEY (conversationId) REFERENCES conversation(id),
-      FOREIGN KEY (userId) REFERENCES user(id)
+      FOREIGN KEY (userId) REFERENCES user(id),
+      UNIQUE KEY (conversationId, userId)
     );
   END IF;
 
@@ -85,7 +87,6 @@ BEGIN
       conversationId INT NOT NULL,
       userId INT NOT NULL,
       text BLOB NOT NULL,
-      isDeleted BOOLEAN DEFAULT FALSE,
       PRIMARY KEY (id),
       FOREIGN KEY (conversationId) REFERENCES conversation(id),
       FOREIGN KEY (userId) REFERENCES user(id)
