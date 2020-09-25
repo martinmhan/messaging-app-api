@@ -15,7 +15,7 @@ passport.use(
       const user = await User.findById(userId);
 
       if (!user) {
-        return done(new Error('User could not be found'), false);
+        return done(new Error(User.constants.USER_DOES_NOT_EXIST), false);
       }
 
       return done(null, user);
@@ -24,7 +24,6 @@ passport.use(
 );
 
 const authenticate = async (req: Request, res: Response, next: Function): Promise<void> => {
-  // JWT not required for login and signup
   const isJWTNotRequired =
     (req.method === 'POST' && req.originalUrl === '/api/user/login') ||
     (req.method === 'POST' && req.originalUrl === '/api/user') ||
