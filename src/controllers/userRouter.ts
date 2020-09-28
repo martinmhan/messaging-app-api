@@ -1,18 +1,20 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import JSONResponse from '../JSONResponse';
-import { statusCodes, errorMessages } from '../constants';
-import User from '../../models/User';
+import JSONResponse from './utils/JSONResponse';
+import { statusCodes, errorMessages } from './utils/constants';
+import User from '../models/User';
 
 const loginUser = async (req: Request, res: Response): Promise<Response> => {
   const authorizationHeader: string = req.headers.authorization;
   const userNamePassword: string = Buffer.from(authorizationHeader?.replace('Basic ', ''), 'base64').toString();
   const [userName, password] = userNamePassword?.split(':');
 
+  console.log('User', User);
   const user = await User.findByUserName(userName);
+  console.log('user', user);
   if (!user || !user?.validatePassword(password)) {
-    return res.status(statusCodes.clientError.badRequest).send(errorMessages.UNSUCCESSFUL_LOGIN);
+    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.UNSUCCESSFUL_LOGIN));
   }
 
   const jwtSecretKey = process.env.JWT_KEY;

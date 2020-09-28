@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
 import authenticate from './authenticate';
-import userRouter from './user/router';
-import conversationRouter from './conversation/router';
+import userRouter from './userRouter';
+import conversationRouter from './conversationRouter';
 
 const apiRouter = Router();
 apiRouter.use('*', authenticate);

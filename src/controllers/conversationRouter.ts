@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 
-import JSONResponse from '../JSONResponse';
-import { statusCodes, errorMessages } from '../constants';
-import Conversation from '../../models/Conversation';
+import JSONResponse from './utils/JSONResponse';
+import { statusCodes, errorMessages } from './utils/constants';
+import Conversation from '../models/Conversation';
 
 const createConversation = async (req: Request, res: Response): Promise<Response> => {
   const { conversation } = req.body;
