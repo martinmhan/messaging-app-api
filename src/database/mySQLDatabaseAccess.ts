@@ -12,29 +12,41 @@ if (!host || !user || !password || !database) {
   throw new Error('Missing required environment variable(s). Please edit .env file');
 }
 
-class MySQLDatabaseAccess {
-  connection: mysql.Connection;
+const mysqlConnection = mysql.createConnection({ host, user, password, database });
+mysqlConnection.on('end', (err: mysql.MysqlError) => {
+  console.log('MySQL database connection ended' + (err ? ` due to error: ${err}` : ''));
+});
 
-  constructor(connectionConfig: mysql.ConnectionConfig) {
-    this.connection = mysql.createConnection(connectionConfig);
-    this.connection.on('end', (err?: mysql.MysqlError) => {
-      console.log('MySQL database connection closed' + (err && ` due to error: ${err}`));
+class MySQLDatabaseAccess {
+  static connection: mysql.Connection = mysqlConnection;
+
+  static connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.connection?.connect((error: mysql.MysqlError) => {
+        if (error) {
+          return reject(error);
+        } else {
+          console.log('Successfully connected to MySQL database');
+        }
+      });
     });
   }
 
-  connect(): void {
-    this.connection?.connect((error: mysql.MysqlError) => {
-      if (error) {
-        throw error;
-      } else {
-        console.log('Successfully connected to MySQL database');
-      }
+  static disconnect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.connection?.end((error: mysql.MysqlError) => {
+        if (error) {
+          reject(error);
+        } else {
+          console.log('Successfully disconnected from MySQL database');
+        }
+      });
     });
   }
 
   runQuery(query: string, params: Array<unknown>): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.connection?.query(query, params, (error, results) => {
+      MySQLDatabaseAccess.connection.query(query, params, (error, results) => {
         if (error) {
           reject(error);
         } else {
@@ -56,6 +68,7 @@ class MySQLDatabaseAccess {
   }
 
   async getUserByUserName(userName: string): Promise<UserSchema> {
+    console.log('original getUserByUserName');
     const [userRow] = await this.runQuery(queries.getUserByUserName, [userName]);
     return userRow;
   }
@@ -126,8 +139,6 @@ class MySQLDatabaseAccess {
   }
 }
 
-const mySQLDatabaseAccess = new MySQLDatabaseAccess({ host, user, password, database });
+MySQLDatabaseAccess.connect();
 
-mySQLDatabaseAccess.connect();
-
-export default mySQLDatabaseAccess;
+export default MySQLDatabaseAccess;
