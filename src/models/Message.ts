@@ -1,5 +1,7 @@
-import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import MySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
 import { MessageSchema } from '../database/schema';
+
+const mySQLDatabaseAccess = new MySQLDatabaseAccess();
 
 class Message {
   private id: number | null = null;
@@ -11,16 +13,16 @@ class Message {
     // Instantiation is restricted to static methods
   }
 
-  static mapTableRowToInstance(tableRow: MessageSchema): Message {
-    if (!tableRow) {
+  static mapDBRowToInstance(databaseRow: MessageSchema): Message {
+    if (!databaseRow) {
       return null;
     }
 
     const message = new Message();
-    message.id = tableRow?.id;
-    message.conversationId = tableRow?.conversationId;
-    message.userId = tableRow?.userId;
-    message.text = tableRow?.text?.toString();
+    message.id = databaseRow?.id;
+    message.conversationId = databaseRow?.conversationId;
+    message.userId = databaseRow?.userId;
+    message.text = databaseRow?.text?.toString();
 
     return message;
   }
@@ -28,7 +30,7 @@ class Message {
   static async create(newMessage: Omit<MessageSchema, 'id'>): Promise<Message> {
     try {
       const { insertId } = await mySQLDatabaseAccess.createMessage(newMessage);
-      const message = this.mapTableRowToInstance({ id: insertId, ...newMessage });
+      const message = this.mapDBRowToInstance({ id: insertId, ...newMessage });
       return message;
     } catch (error) {
       return Promise.reject(error);
@@ -37,8 +39,8 @@ class Message {
 
   static async findByConversationId(conversationId: number): Promise<Array<Message>> {
     try {
-      const tableRows = await mySQLDatabaseAccess.getMessagesByConversationId(conversationId);
-      const messages = tableRows.map(this.mapTableRowToInstance);
+      const databaseRows = await mySQLDatabaseAccess.getMessagesByConversationId(conversationId);
+      const messages = databaseRows.map(this.mapDBRowToInstance);
       return messages;
     } catch (error) {
       return Promise.reject(error);

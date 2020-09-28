@@ -1,8 +1,10 @@
-import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import MySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
 import { MessageSchema, ConversationSchema } from '../database/schema';
 import { encrypt, decrypt } from '../utils/encryption';
 import User from './User';
 import Message from './Message';
+
+const mySQLDatabaseAccess = new MySQLDatabaseAccess();
 
 class Conversation {
   private id: number | null = null;
@@ -18,14 +20,14 @@ class Conversation {
     CONVO_DOES_NOT_EXIST: 'Conversation does not exist',
   };
 
-  static mapTableRowToInstance(tableRow: ConversationSchema): Conversation {
-    if (!tableRow) {
+  static mapDBRowToInstance(databaseRow: ConversationSchema): Conversation {
+    if (!databaseRow) {
       return null;
     }
 
     const conversation = new Conversation();
-    conversation.id = tableRow?.id;
-    conversation.name = decrypt(tableRow?.name?.toString());
+    conversation.id = databaseRow?.id;
+    conversation.name = decrypt(databaseRow?.name?.toString());
 
     return conversation;
   }
@@ -34,7 +36,7 @@ class Conversation {
     try {
       const insert = { name: encrypt(newConversation.name) };
       const { insertId } = await mySQLDatabaseAccess.createConversation(insert);
-      const conversation = this.mapTableRowToInstance({ id: insertId, ...insert });
+      const conversation = this.mapDBRowToInstance({ id: insertId, ...insert });
 
       return conversation;
     } catch (error) {
@@ -44,8 +46,8 @@ class Conversation {
 
   static async findById(conversationId: number): Promise<Conversation> {
     try {
-      const tableRow = await mySQLDatabaseAccess.getConversationById(conversationId);
-      const conversation = this.mapTableRowToInstance(tableRow);
+      const databaseRow = await mySQLDatabaseAccess.getConversationById(conversationId);
+      const conversation = this.mapDBRowToInstance(databaseRow);
 
       return conversation;
     } catch (error) {
@@ -55,8 +57,8 @@ class Conversation {
 
   static async findByUserId(userId: number): Promise<Array<Conversation>> {
     try {
-      const tableRows = await mySQLDatabaseAccess.getConversationsByUserId(userId);
-      const conversations = tableRows.map(this.mapTableRowToInstance);
+      const databaseRows = await mySQLDatabaseAccess.getConversationsByUserId(userId);
+      const conversations = databaseRows.map(this.mapDBRowToInstance);
 
       return conversations;
     } catch (error) {

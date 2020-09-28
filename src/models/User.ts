@@ -1,7 +1,9 @@
-import mySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import MySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
 import { UserSchema } from '../database/schema';
-import { encrypt, decrypt, createSalt, hashAndSaltPassword } from '../utils/encryption';
+import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from '../utils/encryption';
 import Conversation from './Conversation';
+
+const mySQLDatabaseAccess = new MySQLDatabaseAccess();
 
 class User {
   private id: number | null = null;
@@ -21,19 +23,19 @@ class User {
     USER_DOES_NOT_EXIST: 'User does not exist',
   };
 
-  static mapTableRowToInstance(tableRow: UserSchema): User {
-    if (!tableRow) {
+  static mapDBRowToInstance(databaseRow: UserSchema): User {
+    if (!databaseRow) {
       return null;
     }
 
     const user = new User();
-    user.id = tableRow?.id;
-    user.userName = decrypt(tableRow?.userName?.toString());
-    user.firstName = decrypt(tableRow?.firstName?.toString());
-    user.lastName = decrypt(tableRow?.lastName?.toString());
-    user.email = decrypt(tableRow?.email?.toString());
-    user.passwordHash = tableRow?.passwordHash?.toString();
-    user.passwordSalt = tableRow?.passwordSalt?.toString();
+    user.id = databaseRow?.id;
+    user.userName = decrypt(databaseRow?.userName?.toString());
+    user.firstName = decrypt(databaseRow?.firstName?.toString());
+    user.lastName = decrypt(databaseRow?.lastName?.toString());
+    user.email = decrypt(databaseRow?.email?.toString());
+    user.passwordHash = databaseRow?.passwordHash?.toString();
+    user.passwordSalt = databaseRow?.passwordSalt?.toString();
 
     return user;
   }
@@ -42,7 +44,7 @@ class User {
     newUser: Omit<UserSchema, 'id' | 'passwordHash' | 'passwordSalt'> & { password: string },
   ): Promise<User> {
     try {
-      const passwordSalt = createSalt();
+      const passwordSalt = generateRandomString(16);
       const passwordHash = hashAndSaltPassword(newUser.password, passwordSalt);
       const insert = {
         userName: encrypt(newUser.userName),
@@ -54,7 +56,7 @@ class User {
       };
 
       const { insertId } = await mySQLDatabaseAccess.insertUser(insert);
-      const user = this.mapTableRowToInstance({ id: insertId, ...insert });
+      const user = this.mapDBRowToInstance({ id: insertId, ...insert });
 
       return user;
     } catch (error) {
@@ -64,8 +66,8 @@ class User {
 
   static async findById(userId: number): Promise<User> {
     try {
-      const tableRow = await mySQLDatabaseAccess.getUserById(userId);
-      const user = this.mapTableRowToInstance(tableRow);
+      const databaseRow = await mySQLDatabaseAccess.getUserById(userId);
+      const user = this.mapDBRowToInstance(databaseRow);
 
       return user;
     } catch (error) {
@@ -75,8 +77,8 @@ class User {
 
   static async findByUserName(userName: string): Promise<User> {
     try {
-      const tableRow = await mySQLDatabaseAccess.getUserByUserName(encrypt(userName));
-      const user = this.mapTableRowToInstance(tableRow);
+      const databaseRow = await mySQLDatabaseAccess.getUserByUserName(encrypt(userName));
+      const user = this.mapDBRowToInstance(databaseRow);
 
       return user;
     } catch (error) {
@@ -86,8 +88,8 @@ class User {
 
   static async findByConversationId(conversationId: number): Promise<Array<User>> {
     try {
-      const tableRows = await mySQLDatabaseAccess.getUsersByConversationId(conversationId);
-      const users = tableRows.map(this.mapTableRowToInstance);
+      const databaseRows = await mySQLDatabaseAccess.getUsersByConversationId(conversationId);
+      const users = databaseRows.map(this.mapDBRowToInstance);
 
       return users;
     } catch (error) {
@@ -126,6 +128,7 @@ class User {
   }
 
   validatePassword(passwordAttempt: string): boolean {
+    console.log('original validatePassword');
     const passwordAttemptHash = hashAndSaltPassword(passwordAttempt, this.passwordSalt);
     return passwordAttemptHash === this.passwordHash;
   }
