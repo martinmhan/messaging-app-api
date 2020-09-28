@@ -1,7 +1,7 @@
-# Run this script to run all the SQL scripts in the /scripts folder in order
-# SQL scripts should be labeled in order (with the appropriate leading 0s)
-# SQL scripts should be idempotent, i.e., running all of them in order multiple times should not cause any problems.
+# Use this script to run all the SQL scripts in the /scripts folder in order
 # Changes to the database schema should only be done via this script
+# SQL scripts should be labeled and numbered in order (with the appropriate leading 0s)
+# SQL scripts should be idempotent, i.e., running all of them multiple times in order should not cause any problems.
 
 set -e
 
