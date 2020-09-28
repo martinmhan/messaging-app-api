@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 
 const encryptionKey: string = process.env.ENC_KEY;
-const iv: string = process.env.ENC_IV; // TO DO - add a user.iv column, make unique per row
+const iv: string = process.env.ENC_IV;
 
 if (!encryptionKey || !iv) {
-  throw new Error('Missing encryption environment variable. Please edit .env file');
+  throw new Error('Missing encryption environment variable(s). Please edit .env file');
 }
 
 const algorithm = 'aes-128-gcm';
@@ -23,18 +23,18 @@ export const encrypt = (originalText: string): string => {
 
 export const decrypt = (encryptedText: string): string => {
   const encryptedTextBuffer = Buffer.from(encryptedText, 'hex');
-  const authTag = encryptedTextBuffer.slice(-16);
+  const authTag = encryptedTextBuffer.slice(0 - authTagLength);
   const decipher = crypto.createDecipheriv(algorithm, key, iv);
   decipher.setAuthTag(authTag);
-  let decryptedText = decipher.update(encryptedTextBuffer.slice(0, -16));
+  let decryptedText = decipher.update(encryptedTextBuffer.slice(0, 0 - authTagLength));
   decryptedText = Buffer.concat([decryptedText, decipher.final()]);
 
   return decryptedText.toString();
 };
 
-export const createSalt = (): string => {
-  const salt = crypto.randomBytes(16).toString('hex');
-  return salt;
+export const generateRandomString = (length: number): string => {
+  const randomString = crypto.randomBytes(length).toString('hex');
+  return randomString;
 };
 
 export const hashAndSaltPassword = (originalPassword: string, salt: string): string => {
