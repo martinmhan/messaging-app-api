@@ -10,9 +10,7 @@ const loginUser = async (req: Request, res: Response): Promise<Response> => {
   const userNamePassword: string = Buffer.from(authorizationHeader?.replace('Basic ', ''), 'base64').toString();
   const [userName, password] = userNamePassword?.split(':');
 
-  console.log('User', User);
   const user = await User.findByUserName(userName);
-  console.log('user', user);
   if (!user || !user?.validatePassword(password)) {
     return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.UNSUCCESSFUL_LOGIN));
   }
