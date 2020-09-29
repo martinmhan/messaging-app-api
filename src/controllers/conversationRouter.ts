@@ -9,13 +9,13 @@ const createConversation = async (req: Request, res: Response): Promise<Response
   const userId = req.user.getId();
 
   if (!conversation || !conversation.name) {
-    return res.status(400).send(errorMessages.MISSING_INFO);
+    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.MISSING_INFO));
   }
 
   try {
     const newConversation = await Conversation.create(conversation);
     await newConversation.addUser(userId);
-    return res.status(statusCodes.success.created).send(new JSONResponse(null, { newConversation }));
+    return res.status(statusCodes.success.created).send(new JSONResponse(null, newConversation.truncate()));
   } catch (error) {
     return res.status(statusCodes.server.internalServerError).send(errorMessages.ERROR_CREATING_CONVO);
   }
