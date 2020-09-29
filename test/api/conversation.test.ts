@@ -10,4 +10,6 @@ import Conversation from '../../src/models/Conversation';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 
 jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database for tests
-   
+
+
+
