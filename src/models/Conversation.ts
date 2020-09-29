@@ -1,4 +1,4 @@
-import MySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema, ConversationSchema } from '../database/schema';
 import { encrypt, decrypt } from '../utils/encryption';
 import User from './User';
@@ -35,7 +35,7 @@ class Conversation {
   static async create(newConversation: Omit<ConversationSchema, 'id'>): Promise<Conversation> {
     try {
       const insert = { name: encrypt(newConversation.name) };
-      const { insertId } = await mySQLDatabaseAccess.createConversation(insert);
+      const { insertId } = await mySQLDatabaseAccess.insertConversation(insert);
       const conversation = this.mapDBRowToInstance({ id: insertId, ...insert });
 
       return conversation;
@@ -118,7 +118,7 @@ class Conversation {
     }
 
     try {
-      await mySQLDatabaseAccess.createConversationUser(this.id, userId);
+      await mySQLDatabaseAccess.insertConversationUser(this.id, userId);
     } catch (error) {
       return Promise.reject(error);
     }

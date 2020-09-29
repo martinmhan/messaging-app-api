@@ -1,4 +1,4 @@
-import MySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { UserSchema } from '../database/schema';
 import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from '../utils/encryption';
 import Conversation from './Conversation';
@@ -128,18 +128,17 @@ class User {
   }
 
   validatePassword(passwordAttempt: string): boolean {
-    console.log('original validatePassword');
     const passwordAttemptHash = hashAndSaltPassword(passwordAttempt, this.passwordSalt);
     return passwordAttemptHash === this.passwordHash;
   }
 
-  async update(fieldsToUpdate: { firstName?: string; lastName?: string }): Promise<User> {
+  async update(fieldsToUpdate: { firstName?: string; lastName?: string; email?: string }): Promise<User> {
     if (!this.id) {
       return Promise.reject(User.constants.USER_DOES_NOT_EXIST);
     }
 
     try {
-      const fieldsToUpdateEncrypted: { firstName?: string; lastName?: string } = {};
+      const fieldsToUpdateEncrypted: { firstName?: string; lastName?: string; email?: string } = {};
       if (fieldsToUpdate.firstName) {
         fieldsToUpdateEncrypted.firstName = encrypt(fieldsToUpdate.firstName);
       }
@@ -148,9 +147,14 @@ class User {
         fieldsToUpdateEncrypted.lastName = encrypt(fieldsToUpdate.lastName);
       }
 
+      if (fieldsToUpdate.email) {
+        fieldsToUpdateEncrypted.email = encrypt(fieldsToUpdate.email);
+      }
+
       await mySQLDatabaseAccess.updateUser(fieldsToUpdateEncrypted, this.id);
       this.firstName = fieldsToUpdate.firstName || this.firstName;
       this.lastName = fieldsToUpdate.lastName || this.lastName;
+      this.email = fieldsToUpdate.email || this.email;
 
       return this;
     } catch (error) {

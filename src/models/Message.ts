@@ -1,4 +1,4 @@
-import MySQLDatabaseAccess from '../database/mySQLDatabaseAccess';
+import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema } from '../database/schema';
 
 const mySQLDatabaseAccess = new MySQLDatabaseAccess();
@@ -29,7 +29,7 @@ class Message {
 
   static async create(newMessage: Omit<MessageSchema, 'id'>): Promise<Message> {
     try {
-      const { insertId } = await mySQLDatabaseAccess.createMessage(newMessage);
+      const { insertId } = await mySQLDatabaseAccess.insertMessage(newMessage);
       const message = this.mapDBRowToInstance({ id: insertId, ...newMessage });
       return message;
     } catch (error) {

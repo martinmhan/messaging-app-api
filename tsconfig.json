@@ -13,5 +13,8 @@
   },
   "include": [
     "src/**/*"
+  ],
+  "exclude": [
+    "src/database/__mocks__"
   ]
 }
