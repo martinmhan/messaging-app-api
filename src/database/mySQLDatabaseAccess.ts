@@ -1,5 +1,6 @@
 import mysql from 'mysql';
 
+import DatabaseAccess from './DatabaseAccess';
 import { UserSchema, ConversationSchema, MessageSchema } from './schema';
 import queries from './queries';
 
@@ -17,7 +18,7 @@ mysqlConnection.on('end', (err: mysql.MysqlError) => {
   console.log('MySQL database connection ended' + (err ? ` due to error: ${err}` : ''));
 });
 
-class MySQLDatabaseAccess {
+class MySQLDatabaseAccess implements DatabaseAccess {
   static connection: mysql.Connection = mysqlConnection;
 
   static connect(): Promise<void> {
@@ -68,7 +69,6 @@ class MySQLDatabaseAccess {
   }
 
   async getUserByUserName(userName: string): Promise<UserSchema> {
-    console.log('original getUserByUserName');
     const [userRow] = await this.runQuery(queries.getUserByUserName, [userName]);
     return userRow;
   }
@@ -87,7 +87,7 @@ class MySQLDatabaseAccess {
   }
 
   // Conversation queries
-  async createConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
+  async insertConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.insertConversation, [newConversation]);
     return { insertId: insertResult.insertId };
   }
@@ -114,7 +114,7 @@ class MySQLDatabaseAccess {
   }
 
   // ConversationUser queries
-  async createConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
+  async insertConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.insertConversationUser, [{ conversationId, userId }]);
     return { insertId: insertResult.insertId };
   }
@@ -128,7 +128,7 @@ class MySQLDatabaseAccess {
   }
 
   // Message queries
-  async createMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }> {
+  async insertMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }> {
     const insertResult = await this.runQuery(queries.insertMessage, [newMessage]);
     return { insertId: insertResult.insertId };
   }
