@@ -7,6 +7,10 @@ import User from '../models/User';
 
 const loginUser = async (req: Request, res: Response): Promise<Response> => {
   const authorizationHeader: string = req.headers.authorization;
+  if (!authorizationHeader) {
+    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.UNSUCCESSFUL_LOGIN));
+  }
+
   const userNamePassword: string = Buffer.from(authorizationHeader?.replace('Basic ', ''), 'base64').toString();
   const [userName, password] = userNamePassword?.split(':');
 
@@ -45,7 +49,7 @@ const createUser = async (req: Request, res: Response): Promise<Response> => {
     const newUser = await User.create(user);
     return res.status(statusCodes.success.created).send(new JSONResponse(null, newUser.truncate()));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_CREATING_USER));
+    return res.status(statusCodes.server.internalServerError).send(new JSONResponse(errorMessages.ERROR_CREATING_USER));
   }
 };
 
@@ -64,7 +68,7 @@ const getUser = async (req: Request, res: Response): Promise<Response> => {
   try {
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, req.user.truncate()));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_FINDING_USER));
+    return res.status(statusCodes.server.internalServerError).send(new JSONResponse(errorMessages.ERROR_FINDING_USER));
   }
 };
 
@@ -81,11 +85,15 @@ const updateUser = async (req: Request, res: Response): Promise<Response> => {
     return res.status(statusCodes.clientError.forbidden).send(new JSONResponse(errorMessages.UNAUTHORIZED));
   }
 
+  if (!fieldsToUpdate) {
+    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.MISSING_INFO));
+  }
+
   try {
     const updatedUser = await req.user.update(fieldsToUpdate);
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, updatedUser.truncate()));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_UPDATING_USER));
+    return res.status(statusCodes.server.internalServerError).send(new JSONResponse(errorMessages.ERROR_UPDATING_USER));
   }
 };
 
@@ -105,7 +113,7 @@ const deleteUser = async (req: Request, res: Response): Promise<Response> => {
     await req.user.delete();
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, 'User deleted successfully'));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_DELETING_USER));
+    return res.status(statusCodes.server.internalServerError).send(new JSONResponse(errorMessages.ERROR_DELETING_USER));
   }
 };
 
@@ -122,7 +130,7 @@ const getConversations = async (req: Request, res: Response): Promise<Response> 
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, { conversations }));
   } catch (error) {
     return res
-      .status(statusCodes.clientError.badRequest)
+      .status(statusCodes.server.internalServerError)
       .send(new JSONResponse(errorMessages.ERROR_FINDING_USER_CONVOS));
   }
 };

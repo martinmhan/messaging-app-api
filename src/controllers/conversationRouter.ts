@@ -17,7 +17,7 @@ const createConversation = async (req: Request, res: Response): Promise<Response
     await newConversation.addUser(userId);
     return res.status(statusCodes.success.created).send(new JSONResponse(null, { newConversation }));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(errorMessages.ERROR_CREATING_CONVO);
+    return res.status(statusCodes.server.internalServerError).send(errorMessages.ERROR_CREATING_CONVO);
   }
 };
 
@@ -43,7 +43,7 @@ const getConversation = async (req: Request, res: Response): Promise<Response> =
 
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, { conversation }));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_FINDING_CONVO));
+    return res.status(statusCodes.server.internalServerError).send(new JSONResponse(errorMessages.ERROR_FINDING_CONVO));
   }
 };
 
@@ -71,7 +71,9 @@ const updateConversation = async (req: Request, res: Response): Promise<Response
     const updatedConversation = await conversation.update(fieldsToUpdate);
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, { updatedConversation }));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_UPDATING_CONVO));
+    return res
+      .status(statusCodes.server.internalServerError)
+      .send(new JSONResponse(errorMessages.ERROR_UPDATING_CONVO));
   }
 };
 
@@ -98,7 +100,9 @@ const getMessages = async (req: Request, res: Response): Promise<Response> => {
     const messages = await conversation.getMessages();
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, { messages }));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_FINDING_MESSAGES));
+    return res
+      .status(statusCodes.server.internalServerError)
+      .send(new JSONResponse(errorMessages.ERROR_FINDING_MESSAGES));
   }
 };
 
@@ -130,7 +134,9 @@ const createMessage = async (req: Request, res: Response): Promise<Response> => 
     const newMessage = await conversation.createMessage({ ...message, userId });
     return res.status(statusCodes.success.created).send(new JSONResponse(null, { newMessage }));
   } catch (error) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.ERROR_CREATING_MESSAGE));
+    return res
+      .status(statusCodes.server.internalServerError)
+      .send(new JSONResponse(errorMessages.ERROR_CREATING_MESSAGE));
   }
 };
 
@@ -159,7 +165,7 @@ const getConversationMembers = async (req: Request, res: Response): Promise<Resp
     return res.status(statusCodes.success.ok).send(new JSONResponse(null, { conversationMembers }));
   } catch (error) {
     return res
-      .status(statusCodes.clientError.badRequest)
+      .status(statusCodes.server.internalServerError)
       .send(new JSONResponse(errorMessages.ERROR_FINDING_CONVO_MEMBERS));
   }
 };
@@ -198,7 +204,7 @@ const addUserToConversation = async (req: Request, res: Response): Promise<Respo
     return res.status(statusCodes.success.created).send(new JSONResponse(null, 'User added to conversation'));
   } catch (error) {
     return res
-      .status(statusCodes.clientError.badRequest)
+      .status(statusCodes.server.internalServerError)
       .send(new JSONResponse(errorMessages.ERROR_ADDING_USER_TO_CONVO));
   }
 };
@@ -236,7 +242,7 @@ const removeUserFromConversation = async (req: Request, res: Response): Promise<
     return res.status(statusCodes.success.created).send(new JSONResponse(null, 'User removed from conversation'));
   } catch (error) {
     return res
-      .status(statusCodes.clientError.badRequest)
+      .status(statusCodes.server.internalServerError)
       .send(new JSONResponse(errorMessages.ERROR_REMOVING_USER_FROM_CONVO));
   }
 };
