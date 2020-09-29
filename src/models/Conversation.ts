@@ -4,7 +4,7 @@ import { encrypt, decrypt } from '../utils/encryption';
 import User from './User';
 import Message from './Message';
 
-const mySQLDatabaseAccess = new MySQLDatabaseAccess();
+const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
 
 class Conversation {
   private id: number | null = null;
@@ -72,6 +72,10 @@ class Conversation {
 
   getName(): string {
     return this.name;
+  }
+
+  truncate(): { id: number; name: string } {
+    return { id: this.id, name: this.name };
   }
 
   async update(fieldsToUpdate: Partial<Omit<ConversationSchema, 'id'>>): Promise<Conversation> {

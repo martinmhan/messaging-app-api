@@ -26,9 +26,9 @@ describe('POST /api/user/login', () => {
   });
 
   afterAll(async () => {
-    const user = await User.findById(testUserId);
-    await user.delete();
-    await MySQLDatabaseAccess.disconnect();
+    const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
+    await mySQLDatabaseAccess.deleteUser(testUserId);
+    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return a JSON web token when correct credentials are provided in the Authorization header', async () => {
@@ -66,6 +66,8 @@ describe('POST /api/user/login', () => {
 });
 
 describe('POST api/user', () => {
+  let existingUserId: number;
+  let newUserId: number;
   const existingUser = {
     userName: `wonderwoman${uuid.v4()}`,
     password: 'lassoOfTruth',
@@ -90,14 +92,15 @@ describe('POST api/user', () => {
   };
 
   beforeAll(async () => {
-    await User.create(existingUser);
+    const user = await User.create(existingUser);
+    existingUserId = user.getId();
   });
 
   afterAll(async () => {
-    const existingUserInstance = await User.findByUserName(existingUser.userName);
-    const newUserInstance = await User.findByUserName(newUser.userName);
-    await existingUserInstance.delete();
-    await newUserInstance.delete();
+    const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
+    await mySQLDatabaseAccess.deleteUser(existingUserId);
+    await mySQLDatabaseAccess.deleteUser(newUserId);
+    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should create a new user when the required fields are provided', async () => {
@@ -115,7 +118,8 @@ describe('POST api/user', () => {
       id: expect.any(Number),
     });
 
-    const createdUser = await User.findById(response.body?.data?.id);
+    newUserId = response.body?.data?.id;
+    const createdUser = await User.findById(newUserId);
     expect(createdUser).toBeInstanceOf(User);
   });
 
@@ -143,7 +147,6 @@ describe('POST api/user', () => {
     expect(response.status).toBe(400);
     expect(response.body?.error).not.toBeNull();
     expect(response.body?.data).toBeNull();
-    expect(response.body?.data?.id).not.toBeDefined();
 
     const user = await User.findByUserName(newUserMissingLastName.userName);
     expect(user).toBeNull();
@@ -152,6 +155,7 @@ describe('POST api/user', () => {
 
 describe('GET api/user/:userId', () => {
   let userId1: number;
+  let userId2: number;
   const user1 = {
     userName: `greenlantern${uuid.v4()}`,
     password: 'gogreen',
@@ -171,13 +175,14 @@ describe('GET api/user/:userId', () => {
     const createdUser1 = await User.create(user1);
     const createdUser2 = await User.create(user2);
     userId1 = createdUser1.getId();
+    userId2 = createdUser2.getId();
   });
 
   afterAll(async () => {
-    const user1Instance = await User.findByUserName(user1.userName);
-    const user2Instance = await User.findByUserName(user2.userName);
-    await user1Instance.delete();
-    await user2Instance.delete();
+    const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
+    await mySQLDatabaseAccess.deleteUser(userId1);
+    await mySQLDatabaseAccess.deleteUser(userId2);
+    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return 401 when requesting without a JSON web token', async () => {
@@ -234,6 +239,7 @@ describe('GET api/user/:userId', () => {
 
 describe('PATCH api/user', () => {
   let userId1: number;
+  let userId2: number;
   const user1 = {
     userName: `flash${uuid.v4()}`,
     password: 'igofast',
@@ -258,13 +264,14 @@ describe('PATCH api/user', () => {
     const createdUser1 = await User.create(user1);
     const createdUser2 = await User.create(user2);
     userId1 = createdUser1.getId();
+    userId2 = createdUser2.getId();
   });
 
   afterAll(async () => {
-    const userInstance1 = await User.findByUserName(user1.userName);
-    const userInstance2 = await User.findByUserName(user2.userName);
-    await userInstance1.delete();
-    await userInstance2.delete();
+    const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
+    await mySQLDatabaseAccess.deleteUser(userId1);
+    await mySQLDatabaseAccess.deleteUser(userId2);
+    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return 401 when requesting without a JSON web token', async () => {
@@ -348,6 +355,7 @@ describe('PATCH api/user', () => {
 
 describe('DELETE api/user', () => {
   let userId1: number;
+  let userId2: number;
   const user1 = {
     userName: `martianmanhunter${uuid.v4()}`,
     password: 'mars',
@@ -368,13 +376,14 @@ describe('DELETE api/user', () => {
     const createdUser1 = await User.create(user1);
     const createdUser2 = await User.create(user2);
     userId1 = createdUser1.getId();
+    userId2 = createdUser2.getId();
   });
 
   afterAll(async () => {
-    const userInstance1 = await User.findByUserName(user1.userName);
-    const userInstance2 = await User.findByUserName(user2.userName);
-    await userInstance1.delete();
-    await userInstance2.delete();
+    const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
+    await mySQLDatabaseAccess.deleteUser(userId1);
+    await mySQLDatabaseAccess.deleteUser(userId2);
+    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return 401 when requesting without a JSON web token', async () => {

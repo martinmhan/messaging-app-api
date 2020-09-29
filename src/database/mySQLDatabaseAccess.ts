@@ -13,15 +13,28 @@ if (!host || !user || !password || !database) {
   throw new Error('Missing required environment variable(s). Please edit .env file');
 }
 
-const mysqlConnection = mysql.createConnection({ host, user, password, database });
-mysqlConnection.on('end', (err: mysql.MysqlError) => {
-  console.log('MySQL database connection ended' + (err ? ` due to error: ${err}` : ''));
-});
-
 class MySQLDatabaseAccess implements DatabaseAccess {
-  static connection: mysql.Connection = mysqlConnection;
+  private static instance: MySQLDatabaseAccess;
 
-  static connect(): Promise<void> {
+  static getInstance(): MySQLDatabaseAccess {
+    if (!this.instance) {
+      this.instance = new MySQLDatabaseAccess();
+    }
+
+    return this.instance;
+  }
+
+  private constructor() {
+    // Instantiation is restricted to getInstance method
+  }
+
+  private connection: mysql.Connection;
+
+  setConnection(mysqlConnection: mysql.Connection): void {
+    this.connection = mysqlConnection;
+  }
+
+  connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.connection?.connect((error: mysql.MysqlError) => {
         if (error) {
@@ -33,7 +46,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     });
   }
 
-  static disconnect(): Promise<void> {
+  disconnect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.connection?.end((error: mysql.MysqlError) => {
         if (error) {
@@ -47,7 +60,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
 
   runQuery(query: string, params: Array<unknown>): Promise<any> {
     return new Promise((resolve, reject) => {
-      MySQLDatabaseAccess.connection.query(query, params, (error, results) => {
+      this.connection?.query(query, params, (error, results) => {
         if (error) {
           reject(error);
         } else {
@@ -139,6 +152,16 @@ class MySQLDatabaseAccess implements DatabaseAccess {
   }
 }
 
-MySQLDatabaseAccess.connect();
+const mysqlConnection = mysql.createConnection({ host, user, password, database });
+mysqlConnection.on('end', (error: mysql.MysqlError) => {
+  if (error) {
+    console.error(`MySQL database connection ended due to error: ${error}`);
+  } else {
+    console.log('MySQL database connection ended');
+  }
+});
+
+MySQLDatabaseAccess.getInstance().setConnection(mysqlConnection);
+MySQLDatabaseAccess.getInstance().connect();
 
 export default MySQLDatabaseAccess;

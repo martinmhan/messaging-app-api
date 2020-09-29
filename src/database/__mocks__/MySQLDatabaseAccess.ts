@@ -11,15 +11,9 @@ if (!host || !user || !password || !database) {
 }
 
 class MySQLDatabaseAccessMock implements DatabaseAccess {
-  static connect(): void {
-    console.log('Mock Database connected');
-  }
+  private static instance: MySQLDatabaseAccessMock;
 
-  static disconnect(): void {
-    console.log('Mock database disconnected');
-  }
-
-  static mockDatabase: {
+  private static mockDatabase: {
     user: Array<UserSchema>;
     conversation: Array<ConversationSchema>;
     message: Array<MessageSchema>;
@@ -30,6 +24,26 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
     message: [],
     conversationUser: [],
   };
+
+  static getInstance(): MySQLDatabaseAccessMock {
+    if (!this.instance) {
+      this.instance = new MySQLDatabaseAccessMock();
+    }
+
+    return this.instance;
+  }
+
+  private constructor() {
+    // Instantiation is restricted to getInstance method
+  }
+
+  connect(): void {
+    // placeholder method for tests
+  }
+
+  disconnect(): void {
+    // placeholder method for tests
+  }
 
   // User queries
   async insertUser(newUser: Omit<UserSchema, 'id'>): Promise<{ insertId: number }> {

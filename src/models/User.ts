@@ -3,7 +3,7 @@ import { UserSchema } from '../database/schema';
 import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from '../utils/encryption';
 import Conversation from './Conversation';
 
-const mySQLDatabaseAccess = new MySQLDatabaseAccess();
+const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
 
 class User {
   private id: number | null = null;

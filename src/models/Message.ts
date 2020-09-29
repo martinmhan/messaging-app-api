@@ -1,7 +1,7 @@
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema } from '../database/schema';
 
-const mySQLDatabaseAccess = new MySQLDatabaseAccess();
+const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
 
 class Message {
   private id: number | null = null;
