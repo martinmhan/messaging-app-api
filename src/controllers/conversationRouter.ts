@@ -41,7 +41,7 @@ const getConversation = async (req: Request, res: Response): Promise<Response> =
       return res.status(statusCodes.clientError.forbidden).send(new JSONResponse(errorMessages.UNAUTHORIZED));
     }
 
-    return res.status(statusCodes.success.ok).send(new JSONResponse(null, { conversation }));
+    return res.status(statusCodes.success.ok).send(new JSONResponse(null, conversation.truncate()));
   } catch (error) {
     return res.status(statusCodes.server.internalServerError).send(new JSONResponse(errorMessages.ERROR_FINDING_CONVO));
   }
@@ -69,7 +69,7 @@ const updateConversation = async (req: Request, res: Response): Promise<Response
     }
 
     const updatedConversation = await conversation.update(fieldsToUpdate);
-    return res.status(statusCodes.success.ok).send(new JSONResponse(null, { updatedConversation }));
+    return res.status(statusCodes.success.ok).send(new JSONResponse(null, updatedConversation.truncate()));
   } catch (error) {
     return res
       .status(statusCodes.server.internalServerError)
@@ -98,7 +98,7 @@ const getMessages = async (req: Request, res: Response): Promise<Response> => {
     }
 
     const messages = await conversation.getMessages();
-    return res.status(statusCodes.success.ok).send(new JSONResponse(null, { messages }));
+    return res.status(statusCodes.success.ok).send(new JSONResponse(null, messages));
   } catch (error) {
     return res
       .status(statusCodes.server.internalServerError)
@@ -116,7 +116,7 @@ const createMessage = async (req: Request, res: Response): Promise<Response> => 
     return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.INVALID_CONVO_ID));
   }
 
-  if (!message || !message.conversationId || !message.text) {
+  if (!message || !message.text) {
     return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.MISSING_INFO));
   }
 
@@ -131,8 +131,8 @@ const createMessage = async (req: Request, res: Response): Promise<Response> => 
       return res.status(statusCodes.clientError.forbidden).send(new JSONResponse(errorMessages.UNAUTHORIZED));
     }
 
-    const newMessage = await conversation.createMessage({ ...message, userId });
-    return res.status(statusCodes.success.created).send(new JSONResponse(null, { newMessage }));
+    const newMessage = await conversation.createMessage({ text: message.text, userId });
+    return res.status(statusCodes.success.created).send(new JSONResponse(null, newMessage));
   } catch (error) {
     return res
       .status(statusCodes.server.internalServerError)
@@ -162,7 +162,7 @@ const getConversationMembers = async (req: Request, res: Response): Promise<Resp
 
     const conversationMembersUnTruncated = await conversation.getUsers();
     const conversationMembers = conversationMembersUnTruncated.map(user => user.truncate());
-    return res.status(statusCodes.success.ok).send(new JSONResponse(null, { conversationMembers }));
+    return res.status(statusCodes.success.ok).send(new JSONResponse(null, conversationMembers));
   } catch (error) {
     return res
       .status(statusCodes.server.internalServerError)
@@ -211,20 +211,11 @@ const addUserToConversation = async (req: Request, res: Response): Promise<Respo
 
 const removeUserFromConversation = async (req: Request, res: Response): Promise<Response> => {
   const { conversationId } = req.params;
-  const { userIdToRemove } = req.body;
   const userId = req.user?.getId();
 
   const conversationIdInt = parseInt(conversationId, 10);
   if (isNaN(conversationIdInt)) {
     return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.INVALID_CONVO_ID));
-  }
-
-  if (isNaN(userIdToRemove)) {
-    return res.status(statusCodes.clientError.badRequest).send(new JSONResponse(errorMessages.INVALID_USER_ID));
-  }
-
-  if (userIdToRemove !== userId) {
-    return res.status(statusCodes.clientError.forbidden).send(new JSONResponse(errorMessages.UNAUTHORIZED));
   }
 
   try {
@@ -238,8 +229,8 @@ const removeUserFromConversation = async (req: Request, res: Response): Promise<
       return res.status(statusCodes.clientError.forbidden).send(new JSONResponse(errorMessages.USER_NOT_IN_CONVO));
     }
 
-    await conversation.removeUser(userIdToRemove);
-    return res.status(statusCodes.success.created).send(new JSONResponse(null, 'User removed from conversation'));
+    await conversation.removeUser(userId);
+    return res.status(statusCodes.success.ok).send(new JSONResponse(null, 'User removed from conversation'));
   } catch (error) {
     return res
       .status(statusCodes.server.internalServerError)
