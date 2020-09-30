@@ -1,7 +1,7 @@
 {
   "name": "basic-messaging-app",
   "version": "1.0.0",
-  "repository": "https://github.com/martinmhan/basic-messaging-app.git",
+  "repository": "https://github.com/martinmhan/messaging-app-api-typescript.git",
   "author": "Martin Han <martin.m.han@gmail.com>",
   "license": "MIT",
   "scripts": {
@@ -25,9 +25,7 @@
     "mysql": "^2.18.1",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
-    "pm2": "^4.2.3",
-    "ts-jest": "^25.2.1",
-    "typeorm": "^0.2.24"
+    "pm2": "^4.2.3"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",
@@ -53,6 +51,7 @@
     "nodemon": "^2.0.2",
     "prettier": "^1.19.1",
     "supertest": "^4.0.2",
+    "ts-jest": "^25.2.1",
     "typescript": "^3.8.3",
     "uuid": "^8.3.0"
   },
@@ -62,6 +61,6 @@
     }
   },
   "lint-staged": {
-    "*.ts": "eslint --cache"
+    "*.ts": "eslint"
   }
 }
