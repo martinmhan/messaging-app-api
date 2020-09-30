@@ -127,7 +127,8 @@ const getConversations = async (req: Request, res: Response): Promise<Response> 
 
   try {
     const conversations = await req.user.getConversations();
-    return res.status(statusCodes.success.ok).send(new JSONResponse(null, { conversations }));
+    const conversationsTruncated = conversations.map(c => c.truncate());
+    return res.status(statusCodes.success.ok).send(new JSONResponse(null, conversationsTruncated));
   } catch (error) {
     return res
       .status(statusCodes.server.internalServerError)
