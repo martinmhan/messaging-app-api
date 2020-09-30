@@ -147,6 +147,7 @@ class Conversation {
 
     try {
       const messages = await Message.findByConversationId(this.id);
+      messages.sort((a, b) => a.getId() - b.getId());
       this.messages = messages;
       return messages;
     } catch (error) {
@@ -154,13 +155,13 @@ class Conversation {
     }
   }
 
-  async createMessage(message: Omit<MessageSchema, 'id'>): Promise<Message> {
+  async createMessage(message: Omit<MessageSchema, 'id' | 'conversationId'>): Promise<Message> {
     if (!this.id) {
       return Promise.reject(new Error(Conversation.constants.CONVO_DOES_NOT_EXIST));
     }
 
     try {
-      const newMessage = await Message.create(message);
+      const newMessage = await Message.create({ ...message, conversationId: this.id });
       return newMessage;
     } catch (error) {
       return Promise.reject(error);
