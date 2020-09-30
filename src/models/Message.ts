@@ -37,6 +37,16 @@ class Message {
     }
   }
 
+  static async findById(messageId: number): Promise<Message> {
+    try {
+      const databaseRow = await mySQLDatabaseAccess.getMessageById(messageId);
+      const message = this.mapDBRowToInstance(databaseRow);
+      return message;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   static async findByConversationId(conversationId: number): Promise<Array<Message>> {
     try {
       const databaseRows = await mySQLDatabaseAccess.getMessagesByConversationId(conversationId);
