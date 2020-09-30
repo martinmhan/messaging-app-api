@@ -29,18 +29,24 @@ class MySQLDatabaseAccess implements DatabaseAccess {
   }
 
   private connection: mysql.Connection;
+  private connectionConfig: mysql.ConnectionConfig;
 
-  setConnection(mysqlConnection: mysql.Connection): void {
-    this.connection = mysqlConnection;
+  setConnectionConfig(connectionConfig: mysql.ConnectionConfig): void {
+    this.connectionConfig = connectionConfig;
   }
 
   connect(): Promise<void> {
+    if (!this.connectionConfig) {
+      return Promise.reject(new Error('connectionConfig is not set'));
+    }
+
+    this.connection?.end();
+    this.connection = mysql.createConnection(this.connectionConfig);
+
     return new Promise((resolve, reject) => {
       this.connection?.connect((error: mysql.MysqlError) => {
         if (error) {
           return reject(error);
-        } else {
-          console.log('Successfully connected to MySQL database');
         }
       });
     });
@@ -51,14 +57,16 @@ class MySQLDatabaseAccess implements DatabaseAccess {
       this.connection?.end((error: mysql.MysqlError) => {
         if (error) {
           reject(error);
-        } else {
-          console.log('Successfully disconnected from MySQL database');
         }
       });
     });
   }
 
-  runQuery(query: string, params: Array<unknown>): Promise<any> {
+  private runQuery(query: string, params: Array<unknown>): Promise<any> {
+    if (!this.connection) {
+      return Promise.reject(new Error('connection is not set'));
+    }
+
     return new Promise((resolve, reject) => {
       this.connection?.query(query, params, (error, results) => {
         if (error) {
@@ -146,22 +154,18 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     return { insertId: insertResult.insertId };
   }
 
+  async getMessageById(messageId: number): Promise<MessageSchema> {
+    const [messageRow] = await this.runQuery(queries.getMessageById, [messageId]);
+    return messageRow;
+  }
+
   async getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>> {
     const messageRows = await this.runQuery(queries.getMessagesByConversationId, [conversationId]);
     return messageRows;
   }
 }
 
-const mysqlConnection = mysql.createConnection({ host, user, password, database });
-mysqlConnection.on('end', (error: mysql.MysqlError) => {
-  if (error) {
-    console.error(`MySQL database connection ended due to error: ${error}`);
-  } else {
-    console.log('MySQL database connection ended');
-  }
-});
-
-MySQLDatabaseAccess.getInstance().setConnection(mysqlConnection);
+MySQLDatabaseAccess.getInstance().setConnectionConfig({ host, user, password, database });
 MySQLDatabaseAccess.getInstance().connect();
 
 export default MySQLDatabaseAccess;

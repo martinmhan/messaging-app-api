@@ -14,6 +14,7 @@ interface DatabaseAccess {
   deleteConversationUser(conversationId: number, userId: number): Promise<unknown>;
   deleteConversationUsersByUserId(userId: number): Promise<unknown>;
   insertMessage(newMessage: unknown, conversationId: number): Promise<unknown>;
+  getMessageById(messageId: number): Promise<unknown>;
   getMessagesByConversationId(conversationId: number): Promise<unknown>;
 }
 
