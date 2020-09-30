@@ -35,6 +35,7 @@ const deleteConversationUsersByUserId = 'DELETE FROM conversationUser WHERE user
 
 // message queries
 const insertMessage = 'INSERT INTO message SET ?';
+const getMessageById = 'SELECT * FROM message WHERE id = ?';
 const getMessagesByConversationId = 'SELECT * FROM message WHERE conversationId = ?';
 
 export default {
@@ -53,5 +54,6 @@ export default {
   deleteConversationUser,
   deleteConversationUsersByUserId,
   insertMessage,
+  getMessageById,
   getMessagesByConversationId,
 };
