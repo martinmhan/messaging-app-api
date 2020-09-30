@@ -26,8 +26,7 @@ passport.use(
 const authenticate = async (req: Request, res: Response, next: Function): Promise<void> => {
   const isJWTNotRequired =
     (req.method === 'POST' && req.originalUrl === '/api/user/login') ||
-    (req.method === 'POST' && req.originalUrl === '/api/user') ||
-    req.originalUrl === '/api/test';
+    (req.method === 'POST' && req.originalUrl === '/api/user');
 
   if (isJWTNotRequired) {
     next();
