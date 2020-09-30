@@ -23,13 +23,13 @@
 
 ### Features:
   - REST API with layered architecture, following Domain-Driven Design principles
-    - Application Layer (/controllers)
+    - Application Layer (`/controllers`)
       - Controllers that interact directly with clients
       - Logic is limited to handling requests at the top level (e.g., checking authorizations, request parameters)
-    - Domain Layer (/models)
+    - Domain Layer (`/models`)
       - Business objects that encapsulate and handle all domain logic
       - Contain no knowledge of clients or underlying database operations
-    - Infrastructure Layer (/database)
+    - Infrastructure Layer (`/database`)
       - Data Access Object singleton class that handles all database interactions
       - Logic is limited to running queries
   - Custom implementation of Active Record Pattern
@@ -41,7 +41,7 @@
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
     - API and unit tests built using jest
-    - Option to mock the database using a mock DAO (/src/database/__mocks__) that saves/reads records in memory
+    - Option to mock the database using a mock DAO (`/src/database/__mocks__`) that saves/reads records in memory
   - Code linting
     - ESLint and Prettier checks with pre-commit hooks
 
