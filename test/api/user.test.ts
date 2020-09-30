@@ -10,6 +10,7 @@ import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 
 jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
 
+// TO DO - consolidate setup/teardown into one '/api/user API' describe block
 describe('POST /api/user/login', () => {
   let testUserId: number;
   const testUser = {
@@ -17,7 +18,7 @@ describe('POST /api/user/login', () => {
     password: 'alfred',
     firstName: 'Bruce',
     lastName: 'Wayne',
-    email: 'batman@wayneenterprises.com',
+    email: `batman${uuid.v4()}@wayneenterprises.com`,
   };
 
   beforeAll(async () => {
@@ -28,7 +29,6 @@ describe('POST /api/user/login', () => {
   afterAll(async () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
     await mySQLDatabaseAccess.deleteUser(testUserId);
-    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return a JSON web token when correct credentials are provided in the Authorization header', async () => {
@@ -73,7 +73,7 @@ describe('POST api/user', () => {
     password: 'lassoOfTruth',
     firstName: 'Diana',
     lastName: 'Of Themyscira',
-    email: 'wonderwoman@themyscira.com',
+    email: `wonderwoman${uuid.v4()}@themyscira.com`,
   };
 
   const newUser = {
@@ -81,14 +81,14 @@ describe('POST api/user', () => {
     password: 'heatvision',
     firstName: 'Clark',
     lastName: 'Kent',
-    email: 'superman@thedailyplanet.com',
+    email: `superman${uuid.v4()}@thedailyplanet.com`,
   };
 
   const newUserMissingLastName = {
     userName: `aquaman${uuid.v4()}`,
     password: 'ilovefish',
     firstName: 'Arthur',
-    email: 'aquaman@atlantis.com',
+    email: `aquaman${uuid.v4()}@atlantis.com`,
   };
 
   beforeAll(async () => {
@@ -100,7 +100,6 @@ describe('POST api/user', () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
     await mySQLDatabaseAccess.deleteUser(existingUserId);
     await mySQLDatabaseAccess.deleteUser(newUserId);
-    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should create a new user when the required fields are provided', async () => {
@@ -123,7 +122,7 @@ describe('POST api/user', () => {
     expect(createdUser).toBeInstanceOf(User);
   });
 
-  it('should return 400 if attempting to create a user with an existing userName', async () => {
+  it('should return 400 if requesting to create a user with an existing userName', async () => {
     const response = await request(app)
       .post('/api/user')
       .send({
@@ -153,7 +152,7 @@ describe('POST api/user', () => {
   });
 });
 
-describe('GET api/user/:userId', () => {
+describe('GET /api/user/:userId', () => {
   let userId1: number;
   let userId2: number;
   const user1 = {
@@ -161,14 +160,14 @@ describe('GET api/user/:userId', () => {
     password: 'gogreen',
     firstName: 'Hal',
     lastName: 'Jordan',
-    email: 'greenlantern@coastcity.com',
+    email: `greenlantern${uuid.v4()}@coastcity.com`,
   };
   const user2 = {
     userName: `cyborg${uuid.v4()}`,
     password: 'teamrobots',
     firstName: 'Victor',
     lastName: 'Stone',
-    email: 'cyborg@detroit.com',
+    email: `cyborg${uuid.v4()}@detroit.com`,
   };
 
   beforeAll(async () => {
@@ -182,7 +181,6 @@ describe('GET api/user/:userId', () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
     await mySQLDatabaseAccess.deleteUser(userId1);
     await mySQLDatabaseAccess.deleteUser(userId2);
-    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return 401 when requesting without a JSON web token', async () => {
@@ -245,7 +243,7 @@ describe('PATCH api/user', () => {
     password: 'igofast',
     firstName: 'Barry',
     lastName: 'Allen',
-    email: 'theflash@centralcity.com',
+    email: `theflash${uuid.v4()}@centralcity.com`,
   };
 
   const user2 = {
@@ -253,11 +251,11 @@ describe('PATCH api/user', () => {
     password: 'thespeedforce',
     firstName: 'Wally',
     lastName: 'West',
-    email: 'theflash2@centralcity.com',
+    email: `theflash2${uuid.v4()}@centralcity.com`,
   };
 
   const fieldsToUpdate = {
-    email: 'thefastestflash@centralcity.com',
+    email: `thefastestflash${uuid.v4()}@centralcity.com`,
   };
 
   beforeAll(async () => {
@@ -271,7 +269,6 @@ describe('PATCH api/user', () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
     await mySQLDatabaseAccess.deleteUser(userId1);
     await mySQLDatabaseAccess.deleteUser(userId2);
-    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return 401 when requesting without a JSON web token', async () => {
@@ -361,7 +358,7 @@ describe('DELETE api/user', () => {
     password: 'mars',
     firstName: 'Jon',
     lastName: 'Jonnz',
-    email: 'mmh@mars.com',
+    email: `mmh${uuid.v4()}@mars.com`,
   };
 
   const user2 = {
@@ -369,7 +366,7 @@ describe('DELETE api/user', () => {
     password: 'birds',
     firstName: 'Shiera',
     lastName: 'Hall',
-    email: 'hawkgirl@atlanta.com',
+    email: `hawkgirl${uuid.v4()}@atlanta.com`,
   };
 
   beforeAll(async () => {
@@ -383,7 +380,6 @@ describe('DELETE api/user', () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
     await mySQLDatabaseAccess.deleteUser(userId1);
     await mySQLDatabaseAccess.deleteUser(userId2);
-    await mySQLDatabaseAccess.disconnect();
   });
 
   it('should return 401 when requesting without a JSON web token', async () => {
