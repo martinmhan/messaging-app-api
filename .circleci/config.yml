@@ -1,20 +1,8 @@
 version: 2.1
-orbs:
-  aws-code-deploy: circleci/aws-code-deploy@1.0.0
 workflows:
   build-test-deploy:
     jobs:
       - build-and-test
-      # - aws-code-deploy/deploy:
-      #     filters:
-      #       branches:
-      #         only:
-      #           - master
-      #     application-name: node-typescript-api-starter
-      #     deployment-group: deploymentGroupTest2
-      #     service-role-arn: arn:aws:iam::286038464994:role/CodeDeployServiceRole
-      #     bundle-bucket: martinmhan1-test
-      #     bundle-key: node-typescript-api-starter-s3-object
 jobs:
   build-and-test:
     working_directory: ~/project
