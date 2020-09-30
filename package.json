@@ -1,7 +1,7 @@
 {
-  "name": "guess-the-nba-player-api",
+  "name": "basic-messaging-app",
   "version": "1.0.0",
-  "repository": "https://github.com/martinmhan/guess-the-nba-player-api.git",
+  "repository": "https://github.com/martinmhan/messaging-app-api-typescript.git",
   "author": "Martin Han <martin.m.han@gmail.com>",
   "license": "MIT",
   "scripts": {
@@ -20,11 +20,12 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-rate-limit": "^5.1.1",
+    "jsonwebtoken": "^8.5.1",
     "morgan": "^1.9.1",
     "mysql": "^2.18.1",
-    "pm2": "^4.2.3",
-    "ts-jest": "^25.2.1",
-    "typeorm": "^0.2.24"
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "pm2": "^4.2.3"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",
@@ -32,18 +33,34 @@
     "@types/express": "^4.17.3",
     "@types/express-rate-limit": "^5.0.0",
     "@types/jest": "^25.1.4",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/morgan": "^1.9.0",
     "@types/mysql": "^2.15.9",
+    "@types/passport": "^1.0.4",
+    "@types/passport-jwt": "^3.0.3",
     "@types/supertest": "^2.0.8",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^2.23.0",
     "@typescript-eslint/parser": "^2.23.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "husky": ">=4",
     "jest": "^25.1.0",
+    "lint-staged": ">=10",
     "nodemon": "^2.0.2",
     "prettier": "^1.19.1",
     "supertest": "^4.0.2",
-    "typescript": "^3.8.3"
+    "ts-jest": "^25.2.1",
+    "typescript": "^3.8.3",
+    "uuid": "^8.3.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": "eslint"
   }
 }
