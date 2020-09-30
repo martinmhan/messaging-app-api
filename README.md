@@ -1,28 +1,27 @@
-# messaging-app-api-typescript
-TypeScript Messaging App API
+# Node/TypeScript Messaging App API
 
-Summary:
-  Simple messaging app REST API I built to learn TypeScript and implement some design patterns/best practices
+### Summary:
+  Simple messaging app REST API I built to learn TypeScript and implement some best practice design patterns
 
-Technical Stack:
+### Technical Stack:
   - Node.js
   - TypeScript
   - MySQL
 
-Pre-requisites:
+### Prerequisites:
   - Install Node.js (https://nodejs.org/en/)
-  - Install MySQL (`brew install mysql` with Homebrew)
+  - Install MySQL (`brew install mysql` via Homebrew)
   - Install yarn (https://classic.yarnpkg.com/en/docs/install/#mac-stable)
-  - Install TypeScript (`npm install -g typescript`)
+  - Install TypeScript (`npm install -g typescript` via NPM)
 
-Setup:
+### Setup:
   - Clone the repository (`git clone https://www.github.com/martinmhan/messaging-app-api-typescript`)
-  - Install dependencies (`yarn` from project directory)
   - Set up MySQL database tables (run /src/database/upgrade.sh)
+  - Install dependencies (`yarn` from project directory)
   - Run JavaScript build (`yarn build`)
   - Start server (`yarn start`)
 
-Features:
+### Features:
   - REST API with layered architecture, following Domain-Driven Design principles
     - Application Layer (/controllers)
       - Controllers that interact directly with clients
@@ -46,17 +45,12 @@ Features:
   - Code linting
     - ESLint and Prettier checks with pre-commit hooks
 
-TBD:
-  - Socket emits
-  - Task Queue
-  - Docker containers
-  - Device Notifications
-
-Notes:
+### Notes:
   - Users are "soft-deleted" using a unique `deletedOn` column (defaulted to 0). This allows the user table to retain history of deleted users, while still keeping the `userName` unique for active users
   - Text columns are encrypted using a static IV since column searches (e.g., for a specific `userName`) were not easily doable with one unique per row. Open to suggestions how one might achieve both
 
-Resources Used:
+### Resources:
   - https://www.typescriptlang.org/docs/
+  - https://jestjs.io/docs/en/getting-started
   - https://github.com/microsoft/TypeScript-Node-Starter
   - https://jsonapi.org/
