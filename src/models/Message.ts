@@ -1,5 +1,6 @@
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema } from '../database/schema';
+import { encrypt, decrypt } from './utils/encryption';
 
 const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
 
@@ -22,14 +23,19 @@ class Message {
     message.id = databaseRow?.id;
     message.conversationId = databaseRow?.conversationId;
     message.userId = databaseRow?.userId;
-    message.text = databaseRow?.text?.toString();
+    message.text = decrypt(databaseRow?.text?.toString());
 
     return message;
   }
 
   static async create(newMessage: Omit<MessageSchema, 'id'>): Promise<Message> {
     try {
-      const { insertId } = await mySQLDatabaseAccess.insertMessage(newMessage);
+      const insert = {
+        conversationId: newMessage.conversationId,
+        userId: newMessage.userId,
+        text: encrypt(newMessage.text),
+      };
+      const { insertId } = await mySQLDatabaseAccess.insertMessage(insert);
       const message = this.mapDBRowToInstance({ id: insertId, ...newMessage });
       return message;
     } catch (error) {
