@@ -13,18 +13,6 @@ if (!host || !user || !password || !database) {
 class MySQLDatabaseAccessMock implements DatabaseAccess {
   private static instance: MySQLDatabaseAccessMock;
 
-  private static mockDatabase: {
-    user: Array<UserSchema>;
-    conversation: Array<ConversationSchema>;
-    message: Array<MessageSchema>;
-    conversationUser: Array<{ id: number; userId: number; conversationId: number }>;
-  } = {
-    user: [],
-    conversation: [],
-    message: [],
-    conversationUser: [],
-  };
-
   static getInstance(): MySQLDatabaseAccessMock {
     if (!this.instance) {
       this.instance = new MySQLDatabaseAccessMock();
@@ -37,6 +25,18 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
     // Instantiation is restricted to getInstance method
   }
 
+  private mockDatabase: {
+    user: Array<UserSchema>;
+    conversation: Array<ConversationSchema>;
+    message: Array<MessageSchema>;
+    conversationUser: Array<{ id: number; userId: number; conversationId: number }>;
+  } = {
+    user: [],
+    conversation: [],
+    message: [],
+    conversationUser: [],
+  };
+
   connect(): void {
     // placeholder method for tests
   }
@@ -47,33 +47,33 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
 
   // User queries
   async insertUser(newUser: Omit<UserSchema, 'id'>): Promise<{ insertId: number }> {
-    const [lastUser] = MySQLDatabaseAccessMock.mockDatabase.user.slice(-1);
+    const [lastUser] = this.mockDatabase.user.slice(-1);
     const lastUserId = lastUser?.id || 0;
     const insert = {
       ...newUser,
       id: lastUserId + 1,
     };
 
-    MySQLDatabaseAccessMock.mockDatabase.user.push(insert);
+    this.mockDatabase.user.push(insert);
     return { insertId: insert.id };
   }
 
   async getUserById(userId: number): Promise<UserSchema> {
-    const [userRow] = MySQLDatabaseAccessMock.mockDatabase.user.filter(user => user.id === userId);
+    const [userRow] = this.mockDatabase.user.filter(user => user.id === userId);
     return userRow;
   }
 
   async getUserByUserName(userName: string): Promise<UserSchema> {
-    const [userRow] = MySQLDatabaseAccessMock.mockDatabase.user.filter(user => user.userName === userName);
+    const [userRow] = this.mockDatabase.user.filter(user => user.userName === userName);
     return userRow;
   }
 
   async getUsersByConversationId(conversationId: number): Promise<Array<UserSchema>> {
-    const userIds = MySQLDatabaseAccessMock.mockDatabase.conversationUser
+    const userIds = this.mockDatabase.conversationUser
       .filter(conversationUser => conversationUser.conversationId === conversationId)
       .map(conversationUser => conversationUser.userId);
 
-    const userRows = MySQLDatabaseAccessMock.mockDatabase.user.filter(user => userIds.includes(user.id));
+    const userRows = this.mockDatabase.user.filter(user => userIds.includes(user.id));
     return userRows;
   }
 
@@ -87,10 +87,10 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   async deleteUser(userId: number): Promise<void> {
-    for (let i = 0; i < MySQLDatabaseAccessMock.mockDatabase.user.length; i += 1) {
-      const user = MySQLDatabaseAccessMock.mockDatabase.user[i];
+    for (let i = 0; i < this.mockDatabase.user.length; i += 1) {
+      const user = this.mockDatabase.user[i];
       if (user.id === userId) {
-        MySQLDatabaseAccessMock.mockDatabase.user.splice(i, 1);
+        this.mockDatabase.user.splice(i, 1);
         break;
       }
     }
@@ -98,31 +98,29 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
 
   // Conversation queries
   async insertConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
-    const [lastConversation] = MySQLDatabaseAccessMock.mockDatabase.conversation.slice(-1);
+    const [lastConversation] = this.mockDatabase.conversation.slice(-1);
     const lastConversationId = lastConversation?.id || 0;
     const insert = {
       ...newConversation,
       id: lastConversationId + 1,
     };
 
-    MySQLDatabaseAccessMock.mockDatabase.conversation.push(insert);
+    this.mockDatabase.conversation.push(insert);
     return { insertId: insert.id };
   }
 
   async getConversationById(conversationId: number): Promise<ConversationSchema> {
-    const [conversationRow] = MySQLDatabaseAccessMock.mockDatabase.conversation.filter(
-      conversation => conversation.id === conversationId,
-    );
+    const [conversationRow] = this.mockDatabase.conversation.filter(conversation => conversation.id === conversationId);
 
     return conversationRow;
   }
 
   async getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>> {
-    const conversationIds = MySQLDatabaseAccessMock.mockDatabase.conversationUser
+    const conversationIds = this.mockDatabase.conversationUser
       .filter(conversationUser => conversationUser.userId === userId)
       .map(conversationUser => conversationUser.conversationId);
 
-    const conversationRows = MySQLDatabaseAccessMock.mockDatabase.conversation.filter(conversation =>
+    const conversationRows = this.mockDatabase.conversation.filter(conversation =>
       conversationIds.includes(conversation.id),
     );
 
@@ -138,10 +136,10 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   async deleteConversation(conversationId: number): Promise<void> {
-    for (let i = 0; i < MySQLDatabaseAccessMock.mockDatabase.conversation.length; i += 1) {
-      const conversation = MySQLDatabaseAccessMock.mockDatabase.conversation[i];
+    for (let i = 0; i < this.mockDatabase.conversation.length; i += 1) {
+      const conversation = this.mockDatabase.conversation[i];
       if (conversation.id === conversationId) {
-        MySQLDatabaseAccessMock.mockDatabase.conversation.splice(i, 1);
+        this.mockDatabase.conversation.splice(i, 1);
         break;
       }
     }
@@ -149,7 +147,7 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
 
   // ConversationUser queries
   async insertConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
-    const [lastConversationUser] = MySQLDatabaseAccessMock.mockDatabase.conversationUser.slice(-1);
+    const [lastConversationUser] = this.mockDatabase.conversationUser.slice(-1);
     const lastConversationUserId = lastConversationUser?.id || 0;
     const insert = {
       id: lastConversationUserId + 1,
@@ -157,25 +155,25 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
       conversationId,
     };
 
-    MySQLDatabaseAccessMock.mockDatabase.conversationUser.push(insert);
+    this.mockDatabase.conversationUser.push(insert);
     return { insertId: insert.id };
   }
 
   async deleteConversationUser(conversationId: number, userId: number): Promise<void> {
-    for (let i = 0; i < MySQLDatabaseAccessMock.mockDatabase.conversationUser.length; i += 1) {
-      const conversationUser = MySQLDatabaseAccessMock.mockDatabase.conversationUser[i];
+    for (let i = 0; i < this.mockDatabase.conversationUser.length; i += 1) {
+      const conversationUser = this.mockDatabase.conversationUser[i];
       if (conversationUser.conversationId === conversationId && conversationUser.userId === userId) {
-        MySQLDatabaseAccessMock.mockDatabase.conversationUser.splice(i, 1);
+        this.mockDatabase.conversationUser.splice(i, 1);
         break;
       }
     }
   }
 
   async deleteConversationUsersByUserId(userId: number): Promise<void> {
-    for (let i = 0; i < MySQLDatabaseAccessMock.mockDatabase.conversationUser.length; i += 1) {
-      const conversationUser = MySQLDatabaseAccessMock.mockDatabase.conversationUser[i];
+    for (let i = 0; i < this.mockDatabase.conversationUser.length; i += 1) {
+      const conversationUser = this.mockDatabase.conversationUser[i];
       if (conversationUser.userId === userId) {
-        MySQLDatabaseAccessMock.mockDatabase.conversationUser.splice(i, 1);
+        this.mockDatabase.conversationUser.splice(i, 1);
         i -= 1;
       }
     }
@@ -183,24 +181,24 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
 
   // Message queries
   async insertMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }> {
-    const [lastMessage] = MySQLDatabaseAccessMock.mockDatabase.message.slice(-1);
+    const [lastMessage] = this.mockDatabase.message.slice(-1);
     const lastMessageId = lastMessage?.id || 0;
     const insert = {
       ...newMessage,
       id: lastMessageId + 1,
     };
 
-    MySQLDatabaseAccessMock.mockDatabase.message.push(insert);
+    this.mockDatabase.message.push(insert);
     return { insertId: insert.id };
   }
 
   async getMessageById(messageId: number): Promise<MessageSchema> {
-    const [messageRow] = MySQLDatabaseAccessMock.mockDatabase.message.filter(m => m.id === messageId);
+    const [messageRow] = this.mockDatabase.message.filter(m => m.id === messageId);
     return messageRow;
   }
 
   async getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>> {
-    const messageRows = MySQLDatabaseAccessMock.mockDatabase.message.filter(m => m.conversationId === conversationId);
+    const messageRows = this.mockDatabase.message.filter(m => m.conversationId === conversationId);
     return messageRows;
   }
 }
