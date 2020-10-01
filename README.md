@@ -46,7 +46,8 @@
     - ESLint and Prettier checks with pre-commit hooks
 
 ### TBD
-  - Socket emits on message creation
+  - Socket emits (Socket.IO)
+  - Message queue (RabbitMQ?)
 
 ### Notes:
   - Users are "soft-deleted" using a unique `deletedOn` column (defaulted to 0). This allows the user table to retain history of deleted users, while still keeping the `userName` unique for active users
