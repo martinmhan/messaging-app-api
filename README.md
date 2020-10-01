@@ -27,10 +27,10 @@
       - Controllers that interact directly with clients
       - Logic is limited to handling requests at the top level (e.g., checking authorizations, request parameters)
     - Domain Layer (`/models`)
-      - Business objects that encapsulate and handle all domain logic
+      - Business object classes that encapsulate all domain logic
       - Contain no knowledge of clients or underlying database operations
     - Infrastructure Layer (`/database`)
-      - Data Access Object singleton class that handles all database interactions
+      - Data Access Object (DAO) singleton class that handles all database interactions
       - Logic is limited to running queries
   - Custom implementation of Active Record Pattern
     - Business objects can only be instantiated or mutated via methods that first query the database
@@ -41,9 +41,12 @@
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
     - API and unit tests built using jest
-    - Option to mock the database using a mock DAO (`/src/database/__mocks__`) that saves/reads records in memory
+    - Option to mock the database using a mock DAO that saves/reads records in memory
   - Code linting
     - ESLint and Prettier checks with pre-commit hooks
+
+### TBD
+  - Socket emits on message creation
 
 ### Notes:
   - Users are "soft-deleted" using a unique `deletedOn` column (defaulted to 0). This allows the user table to retain history of deleted users, while still keeping the `userName` unique for active users
@@ -52,5 +55,6 @@
 ### Resources:
   - https://www.typescriptlang.org/docs/
   - https://jestjs.io/docs/en/getting-started
+  - https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ddd-oriented-microservice
   - https://github.com/microsoft/TypeScript-Node-Starter
   - https://jsonapi.org/
