@@ -1,21 +1,23 @@
+import { UserSchema, ConversationSchema, MessageSchema } from './schema';
+
 interface DatabaseAccess {
-  insertUser(newUser: unknown): Promise<unknown>;
-  getUserById(userId: number): Promise<unknown>;
-  getUserByUserName(userName: string): Promise<unknown>;
-  getUsersByConversationId(conversationId: number): Promise<Array<unknown>>;
-  updateUser(fieldsToUpdate: unknown, userId: number): Promise<unknown>;
-  deleteUser(userId: number): Promise<unknown>;
-  insertConversation(newConversation: unknown): Promise<unknown>;
-  getConversationById(conversationId: number): Promise<unknown>;
-  getConversationsByUserId(userId: unknown): Promise<Array<unknown>>;
-  updateConversation(fieldsToUpdate: unknown, conversationId: number): Promise<unknown>;
-  deleteConversation(conversationId: number): Promise<unknown>;
-  insertConversationUser(conversationId: number, userId: number): Promise<unknown>;
-  deleteConversationUser(conversationId: number, userId: number): Promise<unknown>;
-  deleteConversationUsersByUserId(userId: number): Promise<unknown>;
-  insertMessage(newMessage: unknown, conversationId: number): Promise<unknown>;
-  getMessageById(messageId: number): Promise<unknown>;
-  getMessagesByConversationId(conversationId: number): Promise<unknown>;
+  insertUser(newUser: unknown): Promise<{ insertId: number }>;
+  getUserById(userId: number): Promise<UserSchema>;
+  getUserByUserName(userName: string): Promise<UserSchema>;
+  getUsersByConversationId(conversationId: number): Promise<Array<UserSchema>>;
+  updateUser(fieldsToUpdate: unknown, userId: number): Promise<void>;
+  deleteUser(userId: number): Promise<void>;
+  insertConversation(newConversation: unknown): Promise<{ insertId: number }>;
+  getConversationById(conversationId: number): Promise<ConversationSchema>;
+  getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>>;
+  updateConversation(fieldsToUpdate: unknown, conversationId: number): Promise<void>;
+  deleteConversation(conversationId: number): Promise<void>;
+  insertConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }>;
+  deleteConversationUser(conversationId: number, userId: number): Promise<void>;
+  deleteConversationUsersByUserId(userId: number): Promise<void>;
+  insertMessage(newMessage: unknown, conversationId: number): Promise<{ insertId: number }>;
+  getMessageById(messageId: number): Promise<MessageSchema>;
+  getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>>;
 }
 
 export default DatabaseAccess;
