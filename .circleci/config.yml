@@ -1,0 +1,22 @@
+version: 2.1
+workflows:
+  build-and-test:
+    jobs:
+      - build-and-test
+jobs:
+  build-and-test:
+    docker:
+      - image: circleci/node:12.18.4
+    steps:
+      - checkout
+      - run:
+          name: install-node-modules
+          command: 'yarn install'
+      - run:
+          name: build
+          command: 'yarn build'
+      - run:
+          name: test
+          command: 'yarn test'
+      - store_artifacts:
+          path: 'coverage'
