@@ -13,7 +13,7 @@ class User {
   private email: string | null = null;
   private passwordHash: string | null = null;
   private passwordSalt: string | null = null;
-  private conversations: Array<Conversation> = [];
+  private conversations: Array<Conversation> | null = null;
 
   private constructor() {
     // Instantiation is restricted to static methods
