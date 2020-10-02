@@ -23,8 +23,9 @@ const deleteConversation = 'UPDATE conversation SET isDeleted = 1 WHERE id = ?';
 const getConversationsByUserId = `
   SELECT * FROM conversation
   WHERE id IN (
-    SELECT DISTINCT conversation_id
-    WHERE user_id = ?
+    SELECT DISTINCT conversationId
+    FROM conversationUser
+    WHERE userId = ?
   )
 `;
 
