@@ -36,7 +36,7 @@ class Message {
         text: encrypt(newMessage.text),
       };
       const { insertId } = await mySQLDatabaseAccess.insertMessage(insert);
-      const message = this.mapDBRowToInstance({ id: insertId, ...newMessage });
+      const message = this.mapDBRowToInstance({ id: insertId, ...insert });
       return message;
     } catch (error) {
       return Promise.reject(error);
