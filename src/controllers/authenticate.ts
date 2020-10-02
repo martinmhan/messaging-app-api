@@ -4,10 +4,16 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 
 import User from '../models/User';
 
+const jwtKey = process.env.JWT_KEY;
+
+if (!jwtKey) {
+  throw new Error('Missing required JWT_KEY environment variable. Please edit .env file');
+}
+
 passport.use(
   new Strategy(
     {
-      secretOrKey: process.env.JWT_KEY,
+      secretOrKey: jwtKey,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     },
     async (jwtPayload: { userId: number }, done: Function): Promise<void> => {
