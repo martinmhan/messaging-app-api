@@ -114,7 +114,7 @@ describe('Web Socket Events', () => {
 
     it('should automatically join rooms a connected socket is a conversation member of', done => {
       const socket = socketIoClient(`http://localhost:${PORT}`, { query: { token: jsonWebToken1 } });
-      socket.on('joinedConversationRoom', (payload: { conversationId: number }) => {
+      socket.on('joinedRoom', (payload: { conversationId: number }) => {
         expect(payload.conversationId).toEqual(testConversationId1);
         done();
       });
@@ -140,8 +140,8 @@ describe('Web Socket Events', () => {
 
   describe('Join Conversation', () => {
     it('should not allow a socket to join a room if the user is not a member of the conversation', done => {
-      socket1.emit('joinConversationRoom', { conversationId: testConversationId2 });
-      socket1.on('joinedConversationRoom', (payload: { conversationId: number }) => {
+      socket1.emit('joinRoom', { conversationId: testConversationId2 });
+      socket1.on('joinedRoom', (payload: { conversationId: number }) => {
         if (payload.conversationId === testConversationId2) {
           expect(true).toBe(false);
         }
@@ -150,9 +150,21 @@ describe('Web Socket Events', () => {
       setTimeout(done, 1000);
     });
 
+    it('should not join a room if an invalid conversationId is provided', done => {
+      const invalidConversationId = -1;
+      socket1.emit('joinRoom', { conversationId: invalidConversationId });
+      socket1.on('joinedRoom', (payload: { conversationId: number }) => {
+        if (payload.conversationId === invalidConversationId) {
+          expect(true).toBe(false);
+        }
+      });
+
+      setTimeout(done, 1000);
+    });
+
     it('should join a socket room if the user a member of the conversation', done => {
-      socket1.emit('joinConversationRoom', { conversationId: testConversationId1 });
-      socket1.on('joinedConversationRoom', (payload: { conversationId: number }) => {
+      socket1.emit('joinRoom', { conversationId: testConversationId1 });
+      socket1.on('joinedRoom', (payload: { conversationId: number }) => {
         expect(payload.conversationId).toEqual(testConversationId1);
         done();
       });
@@ -161,8 +173,8 @@ describe('Web Socket Events', () => {
 
   describe('Leave Conversation', () => {
     it('should leave a socket room and no longer receive events for that room', done => {
-      socket1.emit('leaveConversationRoom', { conversationId: testConversationId1 });
-      socket1.on('leftConversationRoom', (payload: { conversationId: number }) => {
+      socket1.emit('leaveRoom', { conversationId: testConversationId1 });
+      socket1.on('leftRoom', (payload: { conversationId: number }) => {
         expect(payload.conversationId).toEqual(testConversationId1);
       });
 

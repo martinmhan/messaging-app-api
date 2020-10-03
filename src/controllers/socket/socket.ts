@@ -46,17 +46,17 @@ const addSocketHandlers = (io: socketIo.Server): socketIo.Server => {
       const { conversationId, text } = payload;
 
       if (!conversationId || !text) {
-        return Promise.reject(new Error(errorMessages.MISSING_INFO));
+        return new Error(errorMessages.MISSING_INFO);
       }
 
       const conversation = await Conversation.findById(conversationId);
       if (!conversation) {
-        return Promise.reject(new Error(errorMessages.CONVO_DOES_NOT_EXIST));
+        return new Error(errorMessages.CONVO_DOES_NOT_EXIST);
       }
 
       const isUserInConversation = await conversation.checkIfHasUser(userId);
       if (!isUserInConversation) {
-        return Promise.reject(new Error(errorMessages.USER_NOT_IN_CONVO));
+        return new Error(errorMessages.USER_NOT_IN_CONVO);
       }
 
       conversation.createMessage({ userId, text });
@@ -69,12 +69,12 @@ const addSocketHandlers = (io: socketIo.Server): socketIo.Server => {
 
       const conversation = await Conversation.findById(conversationId);
       if (!conversation) {
-        return Promise.reject(new Error(errorMessages.CONVO_DOES_NOT_EXIST));
+        return new Error(errorMessages.CONVO_DOES_NOT_EXIST);
       }
 
       const isUserInConversation = await conversation.checkIfHasUser(userId);
       if (!isUserInConversation) {
-        return Promise.reject(errorMessages.USER_NOT_IN_CONVO);
+        return new Error(errorMessages.USER_NOT_IN_CONVO);
       }
 
       socket.join(conversationId.toString());
