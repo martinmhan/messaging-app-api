@@ -47,6 +47,7 @@
 
 ### TBD
   - Message queue (RabbitMQ?)
+  - Refactor to IOC architecture
   - Accompanying mobile client (iOS Swift?)
 
 ### Notes:
