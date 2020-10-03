@@ -9,7 +9,7 @@ dotenv.config();
 
 import app from '../../src/app';
 import User from '../../src/models/User';
-import socketHandlers from '../../src/controllers/socket';
+import socketHandlers from '../../src/controllers/socket/socket';
 import Conversation from '../../src/models/Conversation';
 
 jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database

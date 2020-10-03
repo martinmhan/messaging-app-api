@@ -1,9 +1,10 @@
 import socketIo from 'socket.io';
 import jwt from 'jsonwebtoken';
 
-import User from '../models/User';
-import Conversation from '../models/Conversation';
-import { errorMessages } from './utils/constants';
+import User from '../../models/User';
+import Conversation from '../../models/Conversation';
+import { errorMessages } from '../api/utils/constants';
+import { events } from './constants';
 
 const jwtKey = process.env.JWT_KEY;
 
@@ -11,28 +12,13 @@ if (!jwtKey) {
   throw new Error('Missing required JWT_KEY environment variable. Please edit .env file');
 }
 
-const events = {
-  serverToClient: {
-    AUTHENTICATED: 'authenticated',
-    NEW_MESSAGE: 'newMessage',
-    JOINED_ROOM: 'joinedConversationRoom',
-    LEFT_ROOM: 'leftConversationRoom',
-  },
-  clientToServer: {
-    NEW_MESSAGE: 'newMessage',
-    JOIN_ROOM: 'joinConversationRoom',
-    LEAVE_ROOM: 'leaveConversationRoom',
-  },
-};
-
-const socketHandlers = (io: socketIo.Server): void => {
+const addSocketHandlers = (io: socketIo.Server): socketIo.Server => {
   io.use(async (socket, next) => {
-    if (!socket.handshake.query.token) {
+    if (!socket.handshake?.query?.token) {
       return socket.disconnect();
     }
 
-    const { token } = socket.handshake.query;
-    const payload = jwt.verify(token, jwtKey);
+    const payload = jwt.verify(socket.handshake.query.token, jwtKey);
     const { userName, userId } = payload as { userName: string; userId: number };
     if (!userName || !userId) {
       return socket.disconnect();
@@ -41,13 +27,13 @@ const socketHandlers = (io: socketIo.Server): void => {
     if (!socket.isAuthenticated) {
       socket.isAuthenticated = true;
       socket.userId = userId;
-      socket.emit(events.serverToClient.AUTHENTICATED);
+      socket.emit(events.AUTHENTICATED);
 
       const user = await User.findById(userId);
       const conversations = await user.getConversations();
       conversations.forEach(conversation => {
         socket.join(conversation.getId().toString());
-        socket.emit(events.serverToClient.JOINED_ROOM, { conversationId: conversation.getId() });
+        socket.emit(events.JOINED_ROOM, { conversationId: conversation.getId() });
       });
     }
 
@@ -55,9 +41,10 @@ const socketHandlers = (io: socketIo.Server): void => {
   });
 
   io.on('connection', (socket: socketIo.Socket) => {
-    socket.on(events.clientToServer.NEW_MESSAGE, async payload => {
+    socket.on(events.NEW_MESSAGE, async (payload: { conversationId: number; text: string }) => {
       const { userId } = socket;
-      const { conversationId, text } = payload as { conversationId: number; text: string };
+      const { conversationId, text } = payload;
+
       if (!conversationId || !text) {
         return Promise.reject(new Error(errorMessages.MISSING_INFO));
       }
@@ -73,14 +60,12 @@ const socketHandlers = (io: socketIo.Server): void => {
       }
 
       conversation.createMessage({ userId, text });
-      socket
-        .to(conversation.getId().toString())
-        .emit(events.serverToClient.NEW_MESSAGE, { conversationId, userId, text });
+      socket.to(conversation.getId().toString()).emit(events.NEW_MESSAGE, { conversationId, userId, text });
     });
 
-    socket.on(events.clientToServer.JOIN_ROOM, async payload => {
+    socket.on(events.JOIN_ROOM, async (payload: { conversationId: number }) => {
       const { userId } = socket;
-      const { conversationId } = payload as { conversationId: number };
+      const { conversationId } = payload;
 
       const conversation = await Conversation.findById(conversationId);
       if (!conversation) {
@@ -93,16 +78,18 @@ const socketHandlers = (io: socketIo.Server): void => {
       }
 
       socket.join(conversationId.toString());
-      socket.emit(events.serverToClient.JOINED_ROOM, { conversationId });
+      socket.emit(events.JOINED_ROOM, { conversationId });
     });
 
-    socket.on(events.clientToServer.LEAVE_ROOM, async payload => {
-      const { conversationId } = payload as { conversationId: number };
+    socket.on(events.LEAVE_ROOM, async (payload: { conversationId: number }) => {
+      const { conversationId } = payload;
 
       socket.leave(conversationId.toString());
-      socket.emit(events.serverToClient.LEFT_ROOM, { conversationId });
+      socket.emit(events.LEFT_ROOM, { conversationId });
     });
   });
+
+  return io;
 };
 
-export default socketHandlers;
+export default addSocketHandlers;
