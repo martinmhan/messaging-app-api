@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import JSONResponse from './utils/JSONResponse';
 import { statusCodes, errorMessages } from './utils/constants';
-import User from '../models/User';
+import User from '../../models/User';
 
 const loginUser = async (req: Request, res: Response): Promise<Response> => {
   const authorizationHeader: string = req.headers.authorization;

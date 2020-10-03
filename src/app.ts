@@ -4,7 +4,7 @@ import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
-import apiRouter from './controllers/apiRouter';
+import apiRouter from './controllers/api/api';
 
 const app = express();
 

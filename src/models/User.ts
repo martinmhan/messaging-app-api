@@ -1,6 +1,6 @@
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { UserSchema } from '../database/schema';
-import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from '../utils/encryption';
+import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from './utils/encryption';
 import Conversation from './Conversation';
 
 const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();

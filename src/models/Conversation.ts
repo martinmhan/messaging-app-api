@@ -1,6 +1,6 @@
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema, ConversationSchema } from '../database/schema';
-import { encrypt, decrypt } from '../utils/encryption';
+import { encrypt, decrypt } from './utils/encryption';
 import User from './User';
 import Message from './Message';
 
