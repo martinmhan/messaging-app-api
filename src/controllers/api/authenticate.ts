@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import passport from 'passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
-import User from '../models/User';
+import User from '../../models/User';
 
 const jwtKey = process.env.JWT_KEY;
 
