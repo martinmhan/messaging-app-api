@@ -40,13 +40,14 @@
   - Database security via text encryption and hashed/salted passwords
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
-    - Functional API and unit tests built using jest
+    - Functional and unit tests for API and web socket built via Jest (85%+ coverage)
     - Option to mock the database using a mock DAO that saves/reads records in memory
   - Code linting
     - ESLint and Prettier checks with pre-commit hooks
 
 ### TBD
   - Message queue (RabbitMQ?)
+  - Load testing
   - Refactor to IOC architecture
   - Accompanying mobile client (iOS Swift?)
 
