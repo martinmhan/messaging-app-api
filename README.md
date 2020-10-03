@@ -40,15 +40,14 @@
   - Database security via text encryption and hashed/salted passwords
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
-    - API and unit tests built using jest
+    - Functional API and unit tests built using jest
     - Option to mock the database using a mock DAO that saves/reads records in memory
   - Code linting
     - ESLint and Prettier checks with pre-commit hooks
 
 ### TBD
-  - Socket emits (Socket.IO)
   - Message queue (RabbitMQ?)
-  - Accompanying mobile client (iOS Swift)
+  - Accompanying mobile client (iOS Swift?)
 
 ### Notes:
   - Users are "soft-deleted" using a unique `deletedOn` column (defaulted to 0). This allows the user table to retain history of deleted users, while still keeping the `userName` unique for active users
@@ -57,6 +56,7 @@
 ### Resources:
   - https://www.typescriptlang.org/docs/
   - https://jestjs.io/docs/en/getting-started
+  - https://socket.io/docs/
   - https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ddd-oriented-microservice
   - https://github.com/microsoft/TypeScript-Node-Starter
   - https://jsonapi.org/
