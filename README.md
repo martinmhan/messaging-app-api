@@ -35,8 +35,8 @@
   - Custom implementation of Active Record Pattern
     - Business objects can only be instantiated or mutated via methods that first query the database
     - Each instance represents a table row in the database
-  - Stateless authentication via JSON Web Tokens
-    - Basic Access Authentication for logins
+  - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
+    - JWTs obtained via Basic Access Authentication login
   - Database security via text encryption and hashed/salted passwords
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
