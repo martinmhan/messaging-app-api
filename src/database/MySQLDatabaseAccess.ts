@@ -1,7 +1,7 @@
 import mysql from 'mysql';
 
 import DatabaseAccess from './DatabaseAccess';
-import { UserSchema, ConversationSchema, MessageSchema } from './schema';
+import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from './schema';
 import queries from './queries';
 
 const host: string = process.env.DB_HOST;
@@ -135,8 +135,8 @@ class MySQLDatabaseAccess implements DatabaseAccess {
   }
 
   // ConversationUser queries
-  async insertConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.insertConversationUser, [{ conversationId, userId }]);
+  async insertConversationUser(conversationUser: Omit<ConversationUserSchema, 'id'>): Promise<{ insertId: number }> {
+    const insertResult = await this.runQuery(queries.insertConversationUser, [conversationUser]);
     return { insertId: insertResult.insertId };
   }
 

@@ -1,4 +1,4 @@
-import { UserSchema, ConversationSchema, MessageSchema } from './schema';
+import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from './schema';
 
 interface DatabaseAccess {
   insertUser(newUser: unknown): Promise<{ insertId: number }>;
@@ -12,10 +12,10 @@ interface DatabaseAccess {
   getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>>;
   updateConversation(fieldsToUpdate: unknown, conversationId: number): Promise<void>;
   deleteConversation(conversationId: number): Promise<void>;
-  insertConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }>;
+  insertConversationUser(newConversationUser: Omit<ConversationUserSchema, 'id'>): Promise<{ insertId: number }>;
   deleteConversationUser(conversationId: number, userId: number): Promise<void>;
   deleteConversationUsersByUserId(userId: number): Promise<void>;
-  insertMessage(newMessage: unknown, conversationId: number): Promise<{ insertId: number }>;
+  insertMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }>;
   getMessageById(messageId: number): Promise<MessageSchema>;
   getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>>;
 }

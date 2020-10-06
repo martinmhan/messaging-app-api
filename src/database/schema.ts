@@ -23,3 +23,9 @@ export interface MessageSchema extends Schema {
   userId: number;
   text: string;
 }
+
+export interface ConversationUserSchema extends Schema {
+  id: number;
+  conversationId: number;
+  userId: number;
+}
