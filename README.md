@@ -32,16 +32,16 @@
     - Infrastructure Layer (`/database`)
       - Data Access Object (DAO) singleton class that handles all database interactions
       - Logic is limited to running queries
+  - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
+    - JWTs obtained via Basic Access Authentication login
   - Custom implementation of Active Record Pattern
     - Each instance reflects a current table row in the database
     - Business objects can only be instantiated or mutated via methods that first query the database
-  - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
-    - JWTs obtained via Basic Access Authentication login
   - Database security via text encryption and hashed/salted passwords
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
-    - Functional and unit tests for API and web socket server(85%+ coverage)
-    - Option to mock the database using a mock DAO that saves/reads records in memory for faster tests
+    - Functional and unit tests for API and web socket server (85%+ coverage)
+    - Option to mock the database using a mock DAO
   - Code linting with pre-commit hooks via ESLint/Prettier
   - Automated Tests via CircleCI
 
