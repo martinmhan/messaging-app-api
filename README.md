@@ -52,7 +52,7 @@
 
 ### Notes:
   - The `BaseController` and `RouterContainer` classes (along with /types/types.ts) were built to strictly enforce specific protocols in handling requests/responses (as opposed to using stray request handler functions passed into an `Express.Router` instance). Namely, the response body must follow the `JSONResponse` interface, and error messages/status codes are pre-defined.
-  - Certain socket tests were 
+  - Certain socket tests were difficult to test since they relied on the socket client NOT receiving a response from the socket server. For these, I nested a failing test inside the expected-to-not-happen socket event and used a `setTimeout(done, 1000)` (wait 1 second for it to occur, otherwise pass), but I'm sure there is a better way to do this.
   - Users are "soft-deleted" using a unique `deletedOn` column (defaulted to 0). This allows the user table to retain history of deleted users, while still keeping the `userName` unique for active users
   - Text columns are encrypted using a static IV since column searches (e.g., for a specific `userName`) were not easily doable with one unique per row. Open to suggestions how one might achieve both
 
