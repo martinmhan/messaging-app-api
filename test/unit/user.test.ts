@@ -44,7 +44,7 @@ describe('User model', () => {
     const user = await User.create(userConfig);
     userToCreateId = user.getId();
     const userRow = await mySQLDatabaseAccess.getUserById(userToCreateId);
-    expect(userRow).toEqual({
+    expect(userRow).toMatchObject({
       id: expect.any(Number),
       userName: expect.any(String),
       firstName: expect.any(String),
