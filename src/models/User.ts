@@ -1,26 +1,22 @@
 import DatabaseAccess from '../database/DatabaseAccess';
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { UserSchema } from '../database/schema';
+import { ErrorMessage } from '../types/types';
 import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from './utils/encryption';
 import Conversation from './Conversation';
 
 class User {
   private static databaseAccess: DatabaseAccess = MySQLDatabaseAccess.getInstance();
-  static USER_DOES_NOT_EXIST = 'User does not exist';
 
   private static dataMapper(databaseRow: UserSchema): User {
-    if (!databaseRow) {
-      return null;
-    }
-
     const user = new User();
-    user.id = databaseRow?.id;
-    user.userName = decrypt(databaseRow?.userName?.toString());
-    user.firstName = decrypt(databaseRow?.firstName?.toString());
-    user.lastName = decrypt(databaseRow?.lastName?.toString());
-    user.email = decrypt(databaseRow?.email?.toString());
-    user.passwordHash = databaseRow?.passwordHash?.toString();
-    user.passwordSalt = databaseRow?.passwordSalt?.toString();
+    user.id = databaseRow.id;
+    user.userName = decrypt(databaseRow.userName.toString());
+    user.firstName = decrypt(databaseRow.firstName.toString());
+    user.lastName = decrypt(databaseRow.lastName.toString());
+    user.email = decrypt(databaseRow.email.toString());
+    user.passwordHash = databaseRow.passwordHash.toString();
+    user.passwordSalt = databaseRow.passwordSalt.toString();
 
     return user;
   }
@@ -49,20 +45,27 @@ class User {
     }
   }
 
-  static async findById(userId: number): Promise<User> {
+  static async findById(userId: number): Promise<User | null> {
     try {
       const databaseRow = await this.databaseAccess.getUserById(userId);
-      const user = this.dataMapper(databaseRow);
+      if (!databaseRow) {
+        return null;
+      }
 
+      const user = this.dataMapper(databaseRow);
       return user;
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
-  static async findByUserName(userName: string): Promise<User> {
+  static async findByUserName(userName: string): Promise<User | null> {
     try {
       const databaseRow = await this.databaseAccess.getUserByUserName(encrypt(userName));
+      if (!databaseRow) {
+        return null;
+      }
+
       const user = this.dataMapper(databaseRow);
 
       return user;
@@ -82,40 +85,40 @@ class User {
     }
   }
 
-  private id: number | null = null;
-  private userName: string | null = null;
-  private firstName: string | null = null;
-  private lastName: string | null = null;
-  private email: string | null = null;
-  private passwordHash: string | null = null;
-  private passwordSalt: string | null = null;
+  private id: number;
+  private userName: string;
+  private firstName: string;
+  private lastName: string;
+  private email: string;
+  private passwordHash: string;
+  private passwordSalt: string;
   private conversations: Array<Conversation> | null = null;
 
   private constructor() {
     // Instantiation is restricted to static methods
   }
 
-  getId(): number {
+  getId = (): number => {
     return this.id;
-  }
+  };
 
-  getUserName(): string {
+  getUserName = (): string => {
     return this.userName;
-  }
+  };
 
-  getFirstName(): string {
+  getFirstName = (): string => {
     return this.firstName;
-  }
+  };
 
-  getLastName(): string {
+  getLastName = (): string => {
     return this.lastName;
-  }
+  };
 
-  getEmail(): string {
+  getEmail = (): string => {
     return this.email;
-  }
+  };
 
-  truncate(): { id: number; userName: string; firstName: string; lastName: string; email: string } {
+  truncate = (): { id: number; userName: string; firstName: string; lastName: string; email: string } => {
     return {
       id: this.id,
       userName: this.userName,
@@ -123,16 +126,20 @@ class User {
       lastName: this.lastName,
       email: this.email,
     };
-  }
+  };
 
-  validatePassword(passwordAttempt: string): boolean {
+  validatePassword = (passwordAttempt: string): boolean => {
+    if (!this.passwordSalt) {
+      return false;
+    }
+
     const passwordAttemptHash = hashAndSaltPassword(passwordAttempt, this.passwordSalt);
     return passwordAttemptHash === this.passwordHash;
-  }
+  };
 
-  async update(fieldsToUpdate: { firstName?: string; lastName?: string; email?: string }): Promise<User> {
+  update = async (fieldsToUpdate: { firstName?: string; lastName?: string; email?: string }): Promise<User> => {
     if (!this.id) {
-      return Promise.reject(User.USER_DOES_NOT_EXIST);
+      return Promise.reject(ErrorMessage.USER_DOES_NOT_EXIST);
     }
 
     try {
@@ -158,11 +165,11 @@ class User {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async updatePassword(newPassword: string): Promise<void> {
-    if (!this.id) {
-      return Promise.reject(User.USER_DOES_NOT_EXIST);
+  updatePassword = async (newPassword: string): Promise<void> => {
+    if (!this.id || !this.passwordSalt) {
+      return Promise.reject(ErrorMessage.USER_DOES_NOT_EXIST);
     }
 
     try {
@@ -172,11 +179,11 @@ class User {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async delete(): Promise<void> {
+  delete = async (): Promise<void> => {
     if (!this.id) {
-      return Promise.reject(User.USER_DOES_NOT_EXIST);
+      return Promise.reject(ErrorMessage.USER_DOES_NOT_EXIST);
     }
 
     try {
@@ -184,20 +191,14 @@ class User {
         User.databaseAccess.deleteUser(this.id),
         User.databaseAccess.deleteConversationUsersByUserId(this.id),
       ]);
-
-      this.id = null;
-      this.firstName = null;
-      this.lastName = null;
-      this.passwordHash = null;
-      this.passwordSalt = null;
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async getConversations(): Promise<Array<Conversation>> {
+  getConversations = async (): Promise<Array<Conversation>> => {
     if (!this.id) {
-      return Promise.reject(User.USER_DOES_NOT_EXIST);
+      return Promise.reject(ErrorMessage.USER_DOES_NOT_EXIST);
     }
 
     try {
@@ -207,7 +208,7 @@ class User {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 }
 
 export default User;

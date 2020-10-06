@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 
-const encryptionKey: string = process.env.ENC_KEY;
-const iv: string = process.env.ENC_IV;
+import { ErrorMessage } from '../../types/types';
 
+const encryptionKey: string | undefined = process.env.ENC_KEY;
+const iv: string | undefined = process.env.ENC_IV;
 if (!encryptionKey || !iv) {
-  throw new Error('Missing encryption environment variable(s). Please edit .env file');
+  throw new Error(ErrorMessage.MISSING_ENV_VARS);
 }
 
 const algorithm = 'aes-128-gcm';

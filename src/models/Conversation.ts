@@ -1,19 +1,15 @@
 import DatabaseAccess from '../database/DatabaseAccess';
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema, ConversationSchema } from '../database/schema';
+import { ErrorMessage } from '../types/types';
 import { encrypt, decrypt } from './utils/encryption';
 import User from './User';
 import Message from './Message';
 
 class Conversation {
   private static databaseAccess: DatabaseAccess = MySQLDatabaseAccess.getInstance();
-  private static CONVO_DOES_NOT_EXIST = 'Conversation does not exist';
 
   private static dataMapper(databaseRow: ConversationSchema): Conversation {
-    if (!databaseRow) {
-      return null;
-    }
-
     const conversation = new Conversation();
     conversation.id = databaseRow?.id;
     conversation.name = decrypt(databaseRow?.name?.toString());
@@ -33,9 +29,13 @@ class Conversation {
     }
   }
 
-  static async findById(conversationId: number): Promise<Conversation> {
+  static async findById(conversationId: number): Promise<Conversation | null> {
     try {
       const databaseRow = await this.databaseAccess.getConversationById(conversationId);
+      if (!databaseRow) {
+        return null;
+      }
+
       const conversation = this.dataMapper(databaseRow);
 
       return conversation;
@@ -55,8 +55,8 @@ class Conversation {
     }
   }
 
-  private id: number | null = null;
-  private name: string | null = null;
+  private id: number;
+  private name: string;
   private users: Array<User> | null = null;
   private messages: Array<Message> | null = null;
 
@@ -64,21 +64,25 @@ class Conversation {
     // Instantiation is restricted to static methods
   }
 
-  getId(): number {
+  getId = (): number => {
     return this.id;
-  }
+  };
 
-  getName(): string {
+  getName = (): string => {
     return this.name;
-  }
+  };
 
-  truncate(): { id: number; name: string } {
+  truncate = (): { id: number | null; name: string | null } => {
     return { id: this.id, name: this.name };
-  }
+  };
 
-  async update(fieldsToUpdate: Partial<Omit<ConversationSchema, 'id'>>): Promise<Conversation> {
+  update = async (fieldsToUpdate: Partial<Omit<ConversationSchema, 'id'>>): Promise<Conversation> => {
     if (!this.id) {
-      return Promise.reject(new Error(Conversation.CONVO_DOES_NOT_EXIST));
+      return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
+    }
+
+    if (!fieldsToUpdate.name) {
+      return Promise.reject(new Error(ErrorMessage.MISSING_INFO));
     }
 
     try {
@@ -90,11 +94,11 @@ class Conversation {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async getUsers(): Promise<Array<User>> {
+  getUsers = async (): Promise<Array<User>> => {
     if (!this.id) {
-      return Promise.reject(new Error(Conversation.CONVO_DOES_NOT_EXIST));
+      return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
 
     try {
@@ -103,20 +107,20 @@ class Conversation {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async checkIfHasUser(userId: number): Promise<boolean> {
+  checkIfHasUser = async (userId: number): Promise<boolean> => {
     if (this.users === null) {
       await this.getUsers();
     }
 
-    const conversationMemberIds = this.users.map(user => user.getId());
-    return conversationMemberIds.includes(userId);
-  }
+    const conversationMemberIds = this.users?.map(user => user.getId());
+    return !!conversationMemberIds?.includes(userId);
+  };
 
-  async addUser(userId: number): Promise<void> {
+  addUser = async (userId: number): Promise<void> => {
     if (!this.id) {
-      return Promise.reject(new Error(Conversation.CONVO_DOES_NOT_EXIST));
+      return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
 
     try {
@@ -124,11 +128,11 @@ class Conversation {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async removeUser(userId: number): Promise<void> {
+  removeUser = async (userId: number): Promise<void> => {
     if (!this.id) {
-      return Promise.reject(new Error(Conversation.CONVO_DOES_NOT_EXIST));
+      return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
 
     try {
@@ -136,26 +140,26 @@ class Conversation {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async getMessages(): Promise<Array<Message>> {
+  getMessages = async (): Promise<Array<Message>> => {
     if (!this.id) {
-      return Promise.reject(new Error(Conversation.CONVO_DOES_NOT_EXIST));
+      return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
 
     try {
       const messages = await Message.findByConversationId(this.id);
-      messages.sort((a, b) => a.getId() - b.getId()); // TO DO - sort by createdDate
+      messages.sort((a, b) => a.getId() - b.getId());
       this.messages = messages;
       return messages;
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 
-  async createMessage(message: Omit<MessageSchema, 'id' | 'conversationId'>): Promise<Message> {
+  createMessage = async (message: Omit<MessageSchema, 'id' | 'conversationId'>): Promise<Message> => {
     if (!this.id) {
-      return Promise.reject(new Error(Conversation.CONVO_DOES_NOT_EXIST));
+      return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
 
     try {
@@ -164,7 +168,7 @@ class Conversation {
     } catch (error) {
       return Promise.reject(error);
     }
-  }
+  };
 }
 
 export default Conversation;
