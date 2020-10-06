@@ -36,8 +36,8 @@ class User {
         firstName: encrypt(newUser.firstName),
         lastName: encrypt(newUser.lastName),
         email: encrypt(newUser.email),
-        passwordHash,
-        passwordSalt,
+        passwordHash: Buffer.from(passwordHash),
+        passwordSalt: Buffer.from(passwordSalt),
       };
 
       const { insertId } = await this.databaseAccess.insertUser(insert);
