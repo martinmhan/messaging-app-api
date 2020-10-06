@@ -24,7 +24,7 @@
 ### Features:
   - REST API with layered architecture, following Domain-Driven Design and OOP principles
     - Application Layer (`/controllers`)
-      - Controllers wrapped in custom classes that enforce a specific response format
+      - Custom wrapper classes used to enforce strict request/response rules and organize socket event logic
       - Logic is limited to handling client requests (e.g., checking authorizations, request parameters)
     - Domain Layer (`/models`)
       - Business object classes that encapsulate all domain logic

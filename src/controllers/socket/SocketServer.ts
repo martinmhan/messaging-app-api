@@ -11,7 +11,7 @@ if (!jwtKey) {
   throw new Error('Missing required JWT_KEY environment variable. Please edit .env file');
 }
 
-class SocketServerContainer {
+class SocketServer {
   private static events = {
     // server to client
     AUTHENTICATED: 'authenticated',
@@ -47,13 +47,13 @@ class SocketServerContainer {
     if (!socket.isAuthenticated) {
       socket.isAuthenticated = true;
       socket.userId = userId;
-      socket.emit(SocketServerContainer.events.AUTHENTICATED);
+      socket.emit(SocketServer.events.AUTHENTICATED);
 
       const user = await User.findById(userId);
       const conversations = await user.getConversations();
       conversations.forEach(conversation => {
         socket.join(conversation.getId().toString());
-        socket.emit(SocketServerContainer.events.JOINED_ROOM, { conversationId: conversation.getId() });
+        socket.emit(SocketServer.events.JOINED_ROOM, { conversationId: conversation.getId() });
       });
     }
 
@@ -82,9 +82,7 @@ class SocketServerContainer {
     }
 
     conversation.createMessage({ userId, text });
-    socket
-      .to(conversation.getId().toString())
-      .emit(SocketServerContainer.events.NEW_MESSAGE, { conversationId, userId, text });
+    socket.to(conversation.getId().toString()).emit(SocketServer.events.NEW_MESSAGE, { conversationId, userId, text });
   };
 
   handleJoinRoom = async (socket: socketIo.Socket, payload: { conversationId: number }): Promise<Error | void> => {
@@ -102,34 +100,34 @@ class SocketServerContainer {
     }
 
     socket.join(conversationId.toString());
-    socket.emit(SocketServerContainer.events.JOINED_ROOM, { conversationId });
+    socket.emit(SocketServer.events.JOINED_ROOM, { conversationId });
   };
 
   handleLeaveRoom = async (socket: socketIo.Socket, payload: { conversationId: number }): Promise<Error | void> => {
     const { conversationId } = payload;
 
     socket.leave(conversationId.toString());
-    socket.emit(SocketServerContainer.events.LEFT_ROOM, { conversationId });
+    socket.emit(SocketServer.events.LEFT_ROOM, { conversationId });
   };
 
   handleConnection = async (socket: socketIo.Socket): Promise<void> => {
-    socket.on(SocketServerContainer.events.NEW_MESSAGE, payload => {
+    socket.on(SocketServer.events.NEW_MESSAGE, payload => {
       this.handleNewMessage(socket, payload);
     });
 
-    socket.on(SocketServerContainer.events.JOIN_ROOM, payload => {
+    socket.on(SocketServer.events.JOIN_ROOM, payload => {
       this.handleJoinRoom(socket, payload);
     });
 
-    socket.on(SocketServerContainer.events.LEAVE_ROOM, payload => {
+    socket.on(SocketServer.events.LEAVE_ROOM, payload => {
       this.handleLeaveRoom(socket, payload);
     });
   };
 
   addHandlers(): void {
     this.io.use(this.authenticateSocket);
-    this.io.on(SocketServerContainer.events.CONNECTION, this.handleConnection);
+    this.io.on(SocketServer.events.CONNECTION, this.handleConnection);
   }
 }
 
-export default SocketServerContainer;
+export default SocketServer;
