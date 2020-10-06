@@ -1,15 +1,9 @@
 import socketIo from 'socket.io';
 import jwt from 'jsonwebtoken';
 
-import * as types from '../../types/types';
+import { ErrorMessage } from '../../types/types';
 import User from '../../models/User';
 import Conversation from '../../models/Conversation';
-
-const jwtKey = process.env.JWT_KEY;
-
-if (!jwtKey) {
-  throw new Error('Missing required JWT_KEY environment variable. Please edit .env file');
-}
 
 class SocketServer {
   private static events = {
@@ -28,20 +22,30 @@ class SocketServer {
   };
 
   private io: socketIo.Server;
+  private jwtKey: string;
 
   constructor(io: socketIo.Server) {
     this.io = io;
-  }
 
-  authenticateSocket = async (socket: socketIo.Socket, next: (err?: unknown) => void): Promise<socketIo.Socket> => {
-    if (!socket.handshake?.query?.token) {
-      return socket.disconnect();
+    const jwtKey = process.env.JWT_KEY;
+    if (!jwtKey) {
+      throw new Error(ErrorMessage.MISSING_JWT_KEY);
     }
 
-    const payload = jwt.verify(socket.handshake.query.token, jwtKey);
+    this.jwtKey = jwtKey;
+  }
+
+  authenticateSocket = async (socket: socketIo.Socket, next: (err?: unknown) => void): Promise<void> => {
+    if (!socket.handshake?.query?.token) {
+      socket.disconnect();
+      return;
+    }
+
+    const payload = jwt.verify(socket.handshake.query.token, this.jwtKey);
     const { userName, userId } = payload as { userName: string; userId: number };
     if (!userName || !userId) {
-      return socket.disconnect();
+      socket.disconnect();
+      return;
     }
 
     if (!socket.isAuthenticated) {
@@ -50,8 +54,9 @@ class SocketServer {
       socket.emit(SocketServer.events.AUTHENTICATED);
 
       const user = await User.findById(userId);
-      const conversations = await user.getConversations();
-      conversations.forEach(conversation => {
+
+      const conversations = await user?.getConversations();
+      conversations?.forEach(conversation => {
         socket.join(conversation.getId().toString());
         socket.emit(SocketServer.events.JOINED_ROOM, { conversationId: conversation.getId() });
       });
@@ -67,18 +72,22 @@ class SocketServer {
     const { userId } = socket;
     const { conversationId, text } = payload;
 
+    if (!userId) {
+      return new Error(ErrorMessage.UNAUTHORIZED);
+    }
+
     if (!conversationId || !text) {
-      return new Error(types.ErrorMessage.MISSING_INFO);
+      return new Error(ErrorMessage.MISSING_INFO);
     }
 
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return new Error(types.ErrorMessage.CONVO_DOES_NOT_EXIST);
+      return new Error(ErrorMessage.CONVO_DOES_NOT_EXIST);
     }
 
     const isUserInConversation = await conversation.checkIfHasUser(userId);
     if (!isUserInConversation) {
-      return new Error(types.ErrorMessage.USER_NOT_IN_CONVO);
+      return new Error(ErrorMessage.USER_NOT_IN_CONVO);
     }
 
     conversation.createMessage({ userId, text });
@@ -89,14 +98,18 @@ class SocketServer {
     const { userId } = socket;
     const { conversationId } = payload;
 
+    if (!userId) {
+      return new Error(ErrorMessage.UNAUTHORIZED);
+    }
+
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return new Error(types.ErrorMessage.CONVO_DOES_NOT_EXIST);
+      return new Error(ErrorMessage.CONVO_DOES_NOT_EXIST);
     }
 
     const isUserInConversation = await conversation.checkIfHasUser(userId);
     if (!isUserInConversation) {
-      return new Error(types.ErrorMessage.USER_NOT_IN_CONVO);
+      return new Error(ErrorMessage.USER_NOT_IN_CONVO);
     }
 
     socket.join(conversationId.toString());
