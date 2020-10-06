@@ -1,18 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 
-import * as types from 'src/types/types';
+import { HTTPMethod, StatusCode, ErrorMessage, JSONResponse } from 'src/types/types';
 
 abstract class BaseController {
-  readonly httpMethod: types.HTTPMethod;
+  readonly httpMethod: HTTPMethod;
   readonly path: string;
+
+  constructor(httpMethod: HTTPMethod, path: string) {
+    this.httpMethod = httpMethod;
+    this.path = path;
+  }
 
   // util function to format return value in handleRequest
   format(
-    statusCode: types.StatusCode,
-    error: types.ErrorMessage | null,
+    statusCode: StatusCode,
+    error: ErrorMessage | null,
     data?: unknown,
     meta?: unknown,
-  ): { statusCode: types.StatusCode; jsonResponse: types.JSONResponse } {
+  ): { statusCode: StatusCode; jsonResponse: JSONResponse } {
     return {
       statusCode,
       jsonResponse: {
@@ -27,7 +32,7 @@ abstract class BaseController {
     request: Request,
     response?: Response,
     next?: NextFunction,
-  ): Promise<{ statusCode: types.StatusCode; jsonResponse: types.JSONResponse }>;
+  ): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }>;
 
   execute = async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
     const { statusCode, jsonResponse } = await this.handleRequest(request, response, next);

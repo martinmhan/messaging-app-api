@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
+import { ErrorMessage } from '../../types/types';
 import User from '../../models/User';
 
 const jwtKey = process.env.JWT_KEY;
-
 if (!jwtKey) {
-  throw new Error('Missing required JWT_KEY environment variable. Please edit .env file');
+  throw new Error(ErrorMessage.MISSING_JWT_KEY);
 }
 
 passport.use(
@@ -21,7 +21,7 @@ passport.use(
       const user = await User.findById(userId);
 
       if (!user) {
-        return done(new Error(User.USER_DOES_NOT_EXIST), false);
+        return done(new Error(ErrorMessage.USER_DOES_NOT_EXIST), false);
       }
 
       return done(null, user);

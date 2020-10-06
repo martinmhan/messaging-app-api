@@ -34,7 +34,7 @@ describe('Conversation model', () => {
     const conversation = await Conversation.create(conversationConfig);
     conversationToCreateId = conversation.getId();
     const conversationRow = await mySQLDatabaseAccess.getConversationById(conversationToCreateId);
-    expect(conversationRow).toMatchObject({
+    expect(conversationRow).toEqual({
       id: conversationToCreateId,
       name: expect.any(String),
     });
@@ -43,7 +43,7 @@ describe('Conversation model', () => {
   it('should get an existing conversation by id', async () => {
     const conversation = await Conversation.findById(conversationToGet.getId());
     expect(conversation).toBeInstanceOf(Conversation);
-    expect(conversation).toEqual({
+    expect(conversation).toMatchObject({
       id: conversationToGet.getId(),
       name: conversationToGet.getName(),
       users: null,
@@ -54,7 +54,7 @@ describe('Conversation model', () => {
   it('should update an existing conversation', async () => {
     const fieldsToUpdate = { name: uuid.v4() };
     const conversation = await Conversation.findById(conversationToUpdate.getId());
-    await conversation.update(fieldsToUpdate);
-    expect(conversation.getName()).toEqual(fieldsToUpdate.name);
+    await conversation?.update(fieldsToUpdate);
+    expect(conversation?.getName()).toEqual(fieldsToUpdate.name);
   });
 });

@@ -44,7 +44,7 @@ describe('User model', () => {
     const user = await User.create(userConfig);
     userToCreateId = user.getId();
     const userRow = await mySQLDatabaseAccess.getUserById(userToCreateId);
-    expect(userRow).toMatchObject({
+    expect(userRow).toEqual({
       id: expect.any(Number),
       userName: expect.any(String),
       firstName: expect.any(String),
@@ -58,7 +58,7 @@ describe('User model', () => {
   it('should get an existing user by id', async () => {
     const user = await User.findById(userToGet.id);
     expect(user).toBeInstanceOf(User);
-    expect(user).toEqual({
+    expect(user).toMatchObject({
       id: userToGet.id,
       userName: userToGet.userName,
       firstName: userToGet.firstName,
@@ -73,7 +73,7 @@ describe('User model', () => {
   it('should get an existing user by userName', async () => {
     const user = await User.findByUserName(userToGet.userName);
     expect(user).toBeInstanceOf(User);
-    expect(user).toEqual({
+    expect(user).toMatchObject({
       id: userToGet.id,
       userName: userToGet.userName,
       firstName: userToGet.firstName,
@@ -100,13 +100,13 @@ describe('User model', () => {
   it('should update an existing user', async () => {
     const user = await User.findById(userToUpdate.id);
     const fieldsToUpdate = { firstName: uuid.v4() };
-    await user.update(fieldsToUpdate);
-    expect(user.getFirstName()).toEqual(fieldsToUpdate.firstName);
+    await user?.update(fieldsToUpdate);
+    expect(user?.getFirstName()).toEqual(fieldsToUpdate.firstName);
   });
 
   it('should delete an existing user', async () => {
     const user = await User.findById(userToDelete.id);
-    await user.delete();
+    await user?.delete();
     const userRow = await mySQLDatabaseAccess.getUserById(userToDelete.id);
     expect(userRow).toBeUndefined();
   });

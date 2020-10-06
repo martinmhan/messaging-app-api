@@ -1,5 +1,5 @@
 export interface JSONResponse {
-  error: ErrorMessage;
+  error: ErrorMessage | null;
   data: unknown;
   meta: unknown;
 }
@@ -23,10 +23,12 @@ export enum StatusCode {
 }
 
 export enum ErrorMessage {
+  UNAUTHENTICATED = 'Unauthenticated',
   UNAUTHORIZED = 'Unauthorized',
   UNSUCCESSFUL_LOGIN = 'Unsuccessful Login',
   USERNAME_TAKEN = 'Username already taken',
   MISSING_INFO = 'Missing required information',
+  USER_DOES_NOT_EXIST = 'User does not exist',
   INVALID_USER_ID = 'userId is invalid',
   ERROR_CREATING_USER = 'Error creating user',
   ERROR_FINDING_USER = 'Error finding user',
@@ -46,4 +48,6 @@ export enum ErrorMessage {
   USER_NOT_IN_CONVO = 'User is not a part of this conversation',
   ERROR_ADDING_USER_TO_CONVO = 'Error adding user to conversation',
   ERROR_REMOVING_USER_FROM_CONVO = 'Error removing user from conversation',
+  MISSING_JWT_KEY = 'Missing required JWT_KEY environment variable. Please edit .env file',
+  MISSING_ENV_VARS = 'Missing required environment variable(s). Please edit .env file',
 }

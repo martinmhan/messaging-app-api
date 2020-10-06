@@ -7,15 +7,11 @@ class Message {
   private static databaseAccess: DatabaseAccess = MySQLDatabaseAccess.getInstance();
 
   private static dataMapper(databaseRow: MessageSchema): Message {
-    if (!databaseRow) {
-      return null;
-    }
-
     const message = new Message();
-    message.id = databaseRow?.id;
-    message.conversationId = databaseRow?.conversationId;
-    message.userId = databaseRow?.userId;
-    message.text = decrypt(databaseRow?.text?.toString());
+    message.id = databaseRow.id;
+    message.conversationId = databaseRow.conversationId;
+    message.userId = databaseRow.userId;
+    message.text = decrypt(databaseRow.text.toString());
 
     return message;
   }
@@ -35,9 +31,13 @@ class Message {
     }
   }
 
-  static async findById(messageId: number): Promise<Message> {
+  static async findById(messageId: number): Promise<Message | null> {
     try {
       const databaseRow = await this.databaseAccess.getMessageById(messageId);
+      if (!databaseRow) {
+        return null;
+      }
+
       const message = this.dataMapper(databaseRow);
       return message;
     } catch (error) {
@@ -55,30 +55,30 @@ class Message {
     }
   }
 
-  private id: number | null = null;
-  private conversationId: number | null = null;
-  private userId: number | null = null;
-  private text: string | null = null;
+  private id: number;
+  private conversationId: number;
+  private userId: number;
+  private text: string;
 
   private constructor() {
     // Instantiation is restricted to static methods
   }
 
-  getId(): number {
+  getId = (): number => {
     return this.id;
-  }
+  };
 
-  getConversationId(): number {
+  getConversationId = (): number => {
     return this.conversationId;
-  }
+  };
 
-  getUserId(): number {
+  getUserId = (): number => {
     return this.userId;
-  }
+  };
 
-  getText(): string {
+  getText = (): string => {
     return this.text;
-  }
+  };
 }
 
 export default Message;
