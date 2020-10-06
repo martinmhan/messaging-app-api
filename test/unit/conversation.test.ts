@@ -39,7 +39,7 @@ describe('Conversation model', () => {
     const conversation = await Conversation.create(conversationToCreate);
     conversationToCreateId = conversation.getId();
     const conversationRow = await mySQLDatabaseAccess.getConversationById(conversationToCreateId);
-    expect(conversationRow).toEqual({
+    expect(conversationRow).toMatchObject({
       id: conversationToCreateId,
       name: expect.any(String),
     });
