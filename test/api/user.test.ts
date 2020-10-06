@@ -110,15 +110,17 @@ describe('User API', () => {
     });
 
     it('should return 400 if requesting to create a user with an existing userName', async () => {
+      const userConfig = {
+        userName: existingUser1.userName,
+        password: uuid.v4(),
+        firstName: uuid.v4(),
+        lastName: uuid.v4(),
+        email: uuid.v4(),
+      };
+
       const response = await request(app)
         .post('/api/user')
-        .send({
-          userName: existingUser1.userName,
-          password: 'iwannabebatman',
-          firstName: 'Batman',
-          lastName: 'Wannabe',
-          email: 'fakebatman@yahoo.com',
-        });
+        .send({ user: userConfig });
 
       expect(response.status).toBe(400);
       expect(response.body?.error).not.toBeNull();
@@ -242,7 +244,7 @@ describe('User API', () => {
       });
 
       const updatedUser = await User.findByUserName(userToUpdate.userName);
-      expect(updatedUser.getEmail()).toBe(fieldsToUpdate.email);
+      expect(updatedUser?.getEmail()).toBe(fieldsToUpdate.email);
     });
   });
 

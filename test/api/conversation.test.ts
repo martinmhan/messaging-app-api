@@ -363,8 +363,8 @@ describe('Conversation API', () => {
       expect(response.body?.data).toStrictEqual('User added to conversation');
 
       const conversation = await Conversation.findById(conversationToAddUserIn.getId());
-      const conversationMembers = await conversation.getUsers();
-      expect(conversationMembers.length).toBe(2);
+      const conversationMembers = await conversation?.getUsers();
+      expect(conversationMembers?.length).toBe(2);
     });
   });
 
@@ -400,8 +400,8 @@ describe('Conversation API', () => {
       expect(response.body?.data).toStrictEqual('User removed from conversation');
 
       const conversation = await Conversation.findById(conversationToRemoveUserFrom.getId());
-      const conversationMembers = await conversation.getUsers();
-      const conversationMemberIds = conversationMembers.map(user => user.getId());
+      const conversationMembers = await conversation?.getUsers();
+      const conversationMemberIds = conversationMembers?.map(user => user.getId());
       expect(conversationMemberIds).not.toContain(testUser1.id);
     });
   });

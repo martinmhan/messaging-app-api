@@ -50,7 +50,7 @@ describe('Web Socket Events', () => {
 
   afterAll(async () => {
     const user = await User.findById(user1.id);
-    await user.delete();
+    await user?.delete();
     server.close();
   });
 
