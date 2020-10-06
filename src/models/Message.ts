@@ -1,20 +1,12 @@
+import DatabaseAccess from '../database/DatabaseAccess';
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
 import { MessageSchema } from '../database/schema';
 import { encrypt, decrypt } from './utils/encryption';
 
-const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
-
 class Message {
-  private id: number | null = null;
-  private conversationId: number | null = null;
-  private userId: number | null = null;
-  private text: string | null = null;
+  private static databaseAccess: DatabaseAccess = MySQLDatabaseAccess.getInstance();
 
-  private constructor() {
-    // Instantiation is restricted to static methods
-  }
-
-  static mapDBRowToInstance(databaseRow: MessageSchema): Message {
+  private static dataMapper(databaseRow: MessageSchema): Message {
     if (!databaseRow) {
       return null;
     }
@@ -35,8 +27,8 @@ class Message {
         userId: newMessage.userId,
         text: encrypt(newMessage.text),
       };
-      const { insertId } = await mySQLDatabaseAccess.insertMessage(insert);
-      const message = this.mapDBRowToInstance({ id: insertId, ...insert });
+      const { insertId } = await this.databaseAccess.insertMessage(insert);
+      const message = this.dataMapper({ id: insertId, ...insert });
       return message;
     } catch (error) {
       return Promise.reject(error);
@@ -45,8 +37,8 @@ class Message {
 
   static async findById(messageId: number): Promise<Message> {
     try {
-      const databaseRow = await mySQLDatabaseAccess.getMessageById(messageId);
-      const message = this.mapDBRowToInstance(databaseRow);
+      const databaseRow = await this.databaseAccess.getMessageById(messageId);
+      const message = this.dataMapper(databaseRow);
       return message;
     } catch (error) {
       return Promise.reject(error);
@@ -55,12 +47,21 @@ class Message {
 
   static async findByConversationId(conversationId: number): Promise<Array<Message>> {
     try {
-      const databaseRows = await mySQLDatabaseAccess.getMessagesByConversationId(conversationId);
-      const messages = databaseRows.map(this.mapDBRowToInstance);
+      const databaseRows = await this.databaseAccess.getMessagesByConversationId(conversationId);
+      const messages = databaseRows.map(this.dataMapper);
       return messages;
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  private id: number | null = null;
+  private conversationId: number | null = null;
+  private userId: number | null = null;
+  private text: string | null = null;
+
+  private constructor() {
+    // Instantiation is restricted to static methods
   }
 
   getId(): number {
