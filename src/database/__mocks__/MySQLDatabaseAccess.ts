@@ -1,5 +1,5 @@
 import DatabaseAccess from '../DatabaseAccess';
-import { UserSchema, ConversationSchema, MessageSchema } from '../schema';
+import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from '../schema';
 
 const host: string = process.env.DB_HOST;
 const user: string = process.env.DB_USER;
@@ -146,13 +146,13 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   // ConversationUser queries
-  async insertConversationUser(conversationId: number, userId: number): Promise<{ insertId: number }> {
+  async insertConversationUser(conversationUser: Omit<ConversationUserSchema, 'id'>): Promise<{ insertId: number }> {
     const [lastConversationUser] = this.mockDatabase.conversationUser.slice(-1);
     const lastConversationUserId = lastConversationUser?.id || 0;
     const insert = {
       id: lastConversationUserId + 1,
-      userId,
-      conversationId,
+      conversationId: conversationUser.conversationId,
+      userId: conversationUser.userId,
     };
 
     this.mockDatabase.conversationUser.push(insert);
