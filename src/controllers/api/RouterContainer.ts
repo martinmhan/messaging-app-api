@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, Router } from 'express';
 
-import * as types from '../../types/types';
+import { HTTPMethod } from '../../types/types';
 import BaseController from './BaseController';
 
 class RouterContainer {
@@ -17,19 +17,19 @@ class RouterContainer {
   useControllers(controllers: Array<BaseController>): void {
     controllers.forEach((controller: BaseController) => {
       switch (controller.httpMethod) {
-        case types.HTTPMethod.POST:
+        case HTTPMethod.POST:
           this.router.post(controller.path, controller.execute);
           break;
-        case types.HTTPMethod.GET:
+        case HTTPMethod.GET:
           this.router.get(controller.path, controller.execute);
           break;
-        case types.HTTPMethod.PATCH:
+        case HTTPMethod.PATCH:
           this.router.patch(controller.path, controller.execute);
           break;
-        case types.HTTPMethod.PUT:
+        case HTTPMethod.PUT:
           this.router.put(controller.path, controller.execute);
           break;
-        case types.HTTPMethod.DELETE:
+        case HTTPMethod.DELETE:
           this.router.delete(controller.path, controller.execute);
           break;
       }
@@ -37,7 +37,7 @@ class RouterContainer {
   }
 
   useHandler(path: string, handler: (req: Request, res: Response, next: NextFunction) => void): void {
-    this.router.use(handler);
+    this.router.use(path, handler);
   }
 }
 
