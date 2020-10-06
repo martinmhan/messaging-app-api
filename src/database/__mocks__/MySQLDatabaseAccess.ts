@@ -1,13 +1,14 @@
 import DatabaseAccess from '../DatabaseAccess';
 import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from '../schema';
+import { ErrorMessage } from '../../types/types';
 
-const host: string = process.env.DB_HOST;
-const user: string = process.env.DB_USER;
-const password: string = process.env.DB_PASS;
-const database: string = process.env.DB_NAME;
+const host: string | undefined = process.env.DB_HOST;
+const user: string | undefined = process.env.DB_USER;
+const password: string | undefined = process.env.DB_PASS;
+const database: string | undefined = process.env.DB_NAME;
 
 if (!host || !user || !password || !database) {
-  throw new Error('Missing required environment variable(s). Please edit .env file');
+  throw new Error(ErrorMessage.MISSING_ENV_VARS);
 }
 
 class MySQLDatabaseAccessMock implements DatabaseAccess {

@@ -1,16 +1,17 @@
 import mysql from 'mysql';
 
+import { ErrorMessage } from '../types/types';
 import DatabaseAccess from './DatabaseAccess';
 import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from './schema';
 import queries from './queries';
 
-const host: string = process.env.DB_HOST;
-const user: string = process.env.DB_USER;
-const password: string = process.env.DB_PASS;
-const database: string = process.env.DB_NAME;
+const host: string | undefined = process.env.DB_HOST;
+const user: string | undefined = process.env.DB_USER;
+const password: string | undefined = process.env.DB_PASS;
+const database: string | undefined = process.env.DB_NAME;
 
 if (!host || !user || !password || !database) {
-  throw new Error('Missing required environment variable(s). Please edit .env file');
+  throw new Error(ErrorMessage.MISSING_ENV_VARS);
 }
 
 class MySQLDatabaseAccess implements DatabaseAccess {
@@ -54,7 +55,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
 
   disconnect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.connection?.end((error: mysql.MysqlError) => {
+      this.connection?.end((error?: mysql.MysqlError) => {
         if (error) {
           reject(error);
         }
