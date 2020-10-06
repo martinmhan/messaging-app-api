@@ -9,7 +9,7 @@ dotenv.config();
 
 import app from '../../src/app';
 import User from '../../src/models/User';
-import socketHandlers from '../../src/controllers/socket/socket';
+import SocketServerContainer from '../../src/controllers/socket/SocketServer';
 import Conversation from '../../src/models/Conversation';
 
 jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
@@ -17,8 +17,11 @@ jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to 
 describe('Web Socket Events', () => {
   const PORT = process.env.PORT || 8080;
   const server = http.createServer(app);
+
   const io = socketIo(server);
-  socketHandlers(io);
+  const socketServer = new SocketServerContainer(io);
+  socketServer.addHandlers();
+
   server.listen(PORT);
 
   let userId1: number;

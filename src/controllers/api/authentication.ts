@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
@@ -21,7 +21,7 @@ passport.use(
       const user = await User.findById(userId);
 
       if (!user) {
-        return done(new Error(User.constants.USER_DOES_NOT_EXIST), false);
+        return done(new Error(User.USER_DOES_NOT_EXIST), false);
       }
 
       return done(null, user);
@@ -29,7 +29,7 @@ passport.use(
   ),
 );
 
-const authenticate = async (req: Request, res: Response, next: Function): Promise<void> => {
+const authenticationHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const isJWTNotRequired =
     (req.method === 'POST' && req.originalUrl === '/api/user/login') ||
     (req.method === 'POST' && req.originalUrl === '/api/user');
@@ -41,4 +41,4 @@ const authenticate = async (req: Request, res: Response, next: Function): Promis
   }
 };
 
-export default authenticate;
+export default authenticationHandler;
