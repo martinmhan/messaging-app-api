@@ -1,6 +1,7 @@
 export interface JSONResponse {
   error: ErrorMessage;
   data: unknown;
+  meta: unknown;
 }
 
 export enum HTTPMethod {

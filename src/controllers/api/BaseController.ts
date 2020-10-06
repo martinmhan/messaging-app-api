@@ -6,17 +6,19 @@ abstract class BaseController {
   readonly httpMethod: types.HTTPMethod;
   readonly path: string;
 
-  // util function to format handleRequest's return value
+  // util function to format return value in handleRequest
   format(
     statusCode: types.StatusCode,
     error: types.ErrorMessage | null,
     data?: unknown,
+    meta?: unknown,
   ): { statusCode: types.StatusCode; jsonResponse: types.JSONResponse } {
     return {
       statusCode,
       jsonResponse: {
         error,
         data: data || null,
+        meta: meta || null,
       },
     };
   }
