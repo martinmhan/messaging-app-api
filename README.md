@@ -1,7 +1,7 @@
 # Node/TypeScript Messaging App API
 
 ### Summary:
-  Simple messaging app REST API I built to learn TypeScript and implement some best practice design patterns
+  A messaging app REST API I built to learn TypeScript and implement some design patterns and best practices. Focus here was on code quality and design, not so much building a working chat app.
 
 ### Technical Stack:
   - Node.js
@@ -22,9 +22,9 @@
   - Start server (`yarn start`)
 
 ### Features:
-  - REST API with layered architecture, following Domain-Driven Design principles
+  - REST API with layered architecture, following Domain-Driven Design and OOP principles
     - Application Layer (`/controllers`)
-      - Custom `BaseController` and `RouterContainer` classes that enforce a specific response bundle format
+      - Controllers wrapped in custom classes that enforce a specific response format
       - Logic is limited to handling client requests (e.g., checking authorizations, request parameters)
     - Domain Layer (`/models`)
       - Business object classes that encapsulate all domain logic
@@ -33,7 +33,7 @@
       - Data Access Object (DAO) singleton class that handles all database interactions
       - Logic is limited to running queries
   - Custom implementation of Active Record Pattern
-    - Each instance reflects a table row in the database
+    - Each instance reflects a current table row in the database
     - Business objects can only be instantiated or mutated via methods that first query the database
   - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
     - JWTs obtained via Basic Access Authentication login
@@ -41,9 +41,9 @@
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
     - Functional and unit tests for API and web socket server(85%+ coverage)
-    - Option to mock the database using a mock DAO that saves/reads records in memory
-  - Code linting
-    - ESLint and Prettier checks with pre-commit hooks
+    - Option to mock the database using a mock DAO that saves/reads records in memory for faster tests
+  - Code linting with pre-commit hooks via ESLint/Prettier
+  - Automated Tests via CircleCI
 
 ### TBD
   - Accompanying mobile client (iOS Swift)
@@ -52,7 +52,7 @@
 
 ### Notes:
   - The `BaseController` and `RouterContainer` classes (along with /types/types.ts) were built to strictly enforce specific protocols in handling requests/responses (as opposed to using stray request handler functions passed into an `Express.Router` instance). Namely, the response body must follow the `JSONResponse` interface, and error messages/status codes are pre-defined.
-  - Certain socket tests were difficult to test since they relied on the socket client NOT receiving a response from the socket server. For these, I nested a failing test inside the expected-to-not-happen socket event and used a `setTimeout(done, 1000)` (i.e., wait 1 second for it to occur, otherwise pass), but I'm sure there is a better way to do this..
+  - Certain socket tests were difficult to test since they relied on the socket client NOT receiving an event from the socket server. For these, I nested a failing test inside the expected-to-not-happen socket event and used a `setTimeout(done, 1000)` (i.e., wait 1 second for it to occur, then pass), but I'm sure there is a better way to do this..
   - Users are "soft-deleted" using a unique `deletedOn` column (defaulted to 0). This allows the user table to retain history of deleted users, while still keeping the `userName` unique for active users
   - Text columns are encrypted using a static IV since column searches (e.g., for a specific `userName`) were not easily doable with one unique per row. Open to suggestions how one might achieve both
 
