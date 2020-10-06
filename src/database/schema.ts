@@ -8,8 +8,8 @@ export interface UserSchema extends Schema {
   firstName: string;
   lastName: string;
   email: string;
-  passwordHash: string;
-  passwordSalt: string;
+  passwordHash: Buffer;
+  passwordSalt: Buffer;
 }
 
 export interface ConversationSchema extends Schema {
