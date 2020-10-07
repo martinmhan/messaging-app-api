@@ -7,7 +7,7 @@ import User from '../../src/models/User';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('User model', () => {
   const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
@@ -45,6 +45,16 @@ describe('User model', () => {
       passwordHash: expect.any(Buffer),
       passwordSalt: expect.any(Buffer),
     });
+  });
+
+  it('should return null when finding a nonexistent userId', async () => {
+    const user = await User.findById(-1);
+    expect(user).toBeNull();
+  });
+
+  it('should return null when finding a nonexistent userName', async () => {
+    const user = await User.findByUserName(uuid.v4());
+    expect(user).toBeNull();
   });
 
   it('should get an existing user by id', async () => {

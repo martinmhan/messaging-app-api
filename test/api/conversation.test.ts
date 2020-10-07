@@ -10,7 +10,7 @@ import Message from '../../src/models/Message';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database for tests
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('Conversation API', () => {
   let testUser1: utils.UserInfo;
@@ -20,11 +20,12 @@ describe('Conversation API', () => {
   let jsonWebToken2: string;
 
   let testConversation: Conversation;
-  let createdConversationId: number;
 
-  let createdMessageId: number;
   let testMessage1: Message;
   let testMessage2: Message;
+
+  let createdConversationId: number;
+  let createdMessageId: number;
 
   beforeEach(async () => {
     testUser1 = await utils.createTestUser();
@@ -44,6 +45,8 @@ describe('Conversation API', () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
     await mySQLDatabaseAccess.deleteConversation(testConversation.getId());
     await mySQLDatabaseAccess.deleteConversation(createdConversationId);
+    await mySQLDatabaseAccess.deleteUser(testUser1.id);
+    await mySQLDatabaseAccess.deleteUser(testUser2.id);
   });
 
   describe('POST /api/conversation', () => {
@@ -100,6 +103,7 @@ describe('Conversation API', () => {
         .get(`/api/conversation/${testConversation.getId()}`)
         .set('Authorization', `Bearer ${jsonWebToken2}`);
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -108,6 +112,16 @@ describe('Conversation API', () => {
         .get('/api/conversation/shouldBeANumber')
         .set('Authorization', `Bearer ${jsonWebToken1}`);
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting a nonexistent conversation', async () => {
+      const response = await request(app)
+        .get('/api/conversation/-1')
+        .set('Authorization', `Bearer ${jsonWebToken1}`);
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -137,17 +151,28 @@ describe('Conversation API', () => {
 
     it('should return 403 when requesting as a user not in the conversation', async () => {
       const response = await request(app)
-        .get(`/api/conversation/${testConversation.getId()}`)
+        .patch(`/api/conversation/${testConversation.getId()}`)
         .set('Authorization', `Bearer ${jsonWebToken2}`);
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
     it('should return 400 when requesting with an invalid conversationId', async () => {
       const response = await request(app)
-        .get('/api/conversation/shouldBeANumber')
+        .patch('/api/conversation/shouldBeANumber')
         .set('Authorization', `Bearer ${jsonWebToken1}`);
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting to update a nonexistent conversation', async () => {
+      const response = await request(app)
+        .patch('/api/conversation/-1')
+        .set('Authorization', `Bearer ${jsonWebToken1}`);
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -172,6 +197,17 @@ describe('Conversation API', () => {
       expect(response.body?.data).toBeUndefined();
     });
 
+    it('should return 400 when requesting with incorrect message info', async () => {
+      const incorrectMessageConfig = { textasdf: uuid.v4() };
+      const response = await request(app)
+        .post(`/api/conversation/${testConversation.getId()}/message`)
+        .set('Authorization', `Bearer ${jsonWebToken2}`)
+        .send({ message: incorrectMessageConfig });
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
     it('should return 403 when requesting as a user not in the conversation', async () => {
       const messageConfig = { text: uuid.v4() };
       const response = await request(app)
@@ -179,6 +215,7 @@ describe('Conversation API', () => {
         .set('Authorization', `Bearer ${jsonWebToken2}`)
         .send({ message: messageConfig });
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -189,6 +226,18 @@ describe('Conversation API', () => {
         .set('Authorization', `Bearer ${jsonWebToken1}`)
         .send({ message: messageConfig });
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting with a nonexistent conversationId', async () => {
+      const messageConfig = { text: uuid.v4() };
+      const response = await request(app)
+        .post('/api/conversation/-1/message')
+        .set('Authorization', `Bearer ${jsonWebToken1}`)
+        .send({ message: messageConfig });
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -225,6 +274,7 @@ describe('Conversation API', () => {
         .get(`/api/conversation/${testConversation.getId()}/messages`)
         .set('Authorization', `Bearer ${jsonWebToken2}`);
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -233,6 +283,16 @@ describe('Conversation API', () => {
         .get('/api/conversation/shouldBeANumber/messages')
         .set('Authorization', `Bearer ${jsonWebToken1}`);
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting for members of a nonexistent conversation', async () => {
+      const response = await request(app)
+        .get('/api/conversation/-1/messages')
+        .set('Authorization', `Bearer ${jsonWebToken1}`);
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -271,6 +331,7 @@ describe('Conversation API', () => {
         .get(`/api/conversation/${testConversation.getId()}/members`)
         .set('Authorization', `Bearer ${jsonWebToken2}`);
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -279,6 +340,16 @@ describe('Conversation API', () => {
         .get('/api/conversation/shouldBeANumber/members')
         .set('Authorization', `Bearer ${jsonWebToken1}`);
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting for members of a nonexistent conversation', async () => {
+      const response = await request(app)
+        .get('/api/conversation/-1/members')
+        .set('Authorization', `Bearer ${jsonWebToken1}`);
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -315,15 +386,57 @@ describe('Conversation API', () => {
         .set('Authorization', `Bearer ${jsonWebToken2}`)
         .send({ userIdToAdd: testUser2.id });
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
-    it('should return 400 when requesting with an invalid conversationId', async () => {
+    it('should return 400 when requesting with a non-integer conversationId', async () => {
       const response = await request(app)
         .post('/api/conversation/shouldBeANumber/member')
         .set('Authorization', `Bearer ${jsonWebToken1}`)
         .send({ userIdToAdd: testUser2.id });
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting to add a user to a nonexistent conversation', async () => {
+      const response = await request(app)
+        .post('/api/conversation/-1/member')
+        .set('Authorization', `Bearer ${jsonWebToken1}`)
+        .send({ userIdToAdd: testUser2.id });
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting with a non-integer userIdToAdd', async () => {
+      const response = await request(app)
+        .post(`/api/conversation/${testConversation.getId()}/member`)
+        .set('Authorization', `Bearer ${jsonWebToken1}`)
+        .send({ userIdToAdd: 'not a number' });
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting to add a nonexistent user', async () => {
+      const response = await request(app)
+        .post(`/api/conversation/${testConversation.getId()}/member`)
+        .set('Authorization', `Bearer ${jsonWebToken1}`)
+        .send({ userIdToAdd: 0 });
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting to add a user already in the conversation', async () => {
+      const response = await request(app)
+        .post(`/api/conversation/${testConversation.getId()}/member`)
+        .set('Authorization', `Bearer ${jsonWebToken1}`)
+        .send({ userIdToAdd: testUser1.id });
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -354,6 +467,7 @@ describe('Conversation API', () => {
         .delete(`/api/conversation/${testConversation.getId()}/member`)
         .set('Authorization', `Bearer ${jsonWebToken2}`);
       expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
@@ -362,10 +476,20 @@ describe('Conversation API', () => {
         .delete('/api/conversation/shouldBeANumber/member')
         .set('Authorization', `Bearer ${jsonWebToken1}`);
       expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
-    it('should return 201 and remove a user from the conversation', async () => {
+    it('should return 400 when requesting to remove a member from a nonexistent conversation', async () => {
+      const response = await request(app)
+        .delete('/api/conversation/-1/member')
+        .set('Authorization', `Bearer ${jsonWebToken1}`);
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 200 and remove a user from the conversation', async () => {
       const response = await request(app)
         .delete(`/api/conversation/${testConversation.getId()}/member`)
         .set('Authorization', `Bearer ${jsonWebToken1}`);

@@ -7,7 +7,7 @@ import Conversation from '../../src/models/Conversation';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('Conversation model', () => {
   const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
@@ -33,6 +33,11 @@ describe('Conversation model', () => {
       id: createdConversation.getId(),
       name: expect.any(String),
     });
+  });
+
+  it('should return null when finding a nonexistent conversationId', async () => {
+    const conversation = await Conversation.findById(-1);
+    expect(conversation).toBeNull();
   });
 
   it('should get an existing conversation by id', async () => {

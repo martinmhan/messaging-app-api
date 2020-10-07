@@ -10,7 +10,7 @@ import Conversation from '../../src/models/Conversation';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('User API', () => {
   let testUser1: utils.UserInfo;
@@ -158,6 +158,16 @@ describe('User API', () => {
       expect(response.body?.data).toBeNull();
     });
 
+    it('should return 400 when requesting with an invalid userId', async () => {
+      const response = await request(app)
+        .get('/api/user/notANumber')
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`);
+
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
     it('should return user information when requesting with a valid JSON web token', async () => {
       const response = await request(app)
         .get(`/api/user/${testUser1.id}`)
@@ -233,6 +243,49 @@ describe('User API', () => {
     });
   });
 
+  describe('PUT api/user/:userId/password', () => {
+    it('should return 401 when requesting without a JSON web token', async () => {
+      const response = await request(app).put(`/api/user/${testUser1.id}/password`);
+
+      expect(response.status).toBe(401);
+      expect(response.body?.data).toBeUndefined();
+    });
+
+    it('should return 403 when requesting with a JSON web token of a different user', async () => {
+      const response = await request(app)
+        .put(`/api/user/${testUser1.id}/password`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting without a newPassword', async () => {
+      const response = await request(app)
+        .put(`/api/user/${testUser1.id}/password`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 200 and update a user password', async () => {
+      const newPassword = uuid.v4();
+      const response = await request(app)
+        .put(`/api/user/${testUser1.id}/password`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`)
+        .send({ newPassword });
+
+      expect(response.status).toBe(200);
+      expect(response.body?.error).toBeNull();
+      expect(response.body?.data).not.toBeNull();
+
+      const user = await User.findById(testUser1.id);
+      expect(user?.validatePassword(newPassword)).toBe(true);
+    });
+  });
+
   describe('DELETE api/user', () => {
     it('should return 401 when requesting without a JSON web token', async () => {
       const response = await request(app).delete(`/api/user/${testUser1.id}`);
@@ -278,6 +331,16 @@ describe('User API', () => {
 
       expect(response.status).toBe(401);
       expect(response.body?.data).toBeUndefined();
+    });
+
+    it('should return 403 when requesting conversations of a different user', async () => {
+      const response = await request(app)
+        .get(`/api/user/${testUser1.id}/conversations`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
     });
 
     it('should return 200 with the conversations the user is a member of', async () => {
