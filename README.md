@@ -37,11 +37,12 @@
   - Custom implementation of Active Record Pattern
     - Each instance reflects a current table row in the database
     - Business objects can only be instantiated or mutated via methods that first query the database
-  - Database security via text encryption and hashed/salted passwords
-    - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
-    - Functional and unit tests for API, web socket, and domain (90%+ coverage)
+    - Functional and unit tests for API, web socket, and domain objects(90%+ coverage)
     - Option to mock the database for faster tests
+  - Database
+    - Encrypted text fields and hashed/salted passwords
+    - Ordered, idempotent SQL scripts to upgrade to the latest database
   - Code linting with pre-commit hooks via ESLint/Prettier
   - Automated Tests via CircleCI
 
