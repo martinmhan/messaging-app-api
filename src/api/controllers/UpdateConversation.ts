@@ -5,7 +5,7 @@ import Conversation from '../../models/Conversation';
 import BaseController from '../BaseController';
 
 class UpdateConversation extends BaseController {
-  async handleRequest(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
+  async handler(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
     const userId = req.user?.getId();
     const { fieldsToUpdate } = req.body;
     const { conversationId } = req.params;

@@ -5,7 +5,7 @@ import User from '../../models/User';
 import BaseController from '../BaseController';
 
 class CreateUser extends BaseController {
-  async handleRequest(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
+  async handler(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
     const { user } = req.body;
 
     if (!user || !user.userName || !user.password || !user.firstName || !user.lastName || !user.email) {
