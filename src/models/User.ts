@@ -1,6 +1,6 @@
-import DatabaseAccess from '../database/DatabaseAccess';
+import DatabaseAccess from '../types/DatabaseAccess';
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
-import { UserSchema } from '../database/schema';
+import { UserSchema } from '../types/schema';
 import { ErrorMessage } from '../types/types';
 import { encrypt, decrypt, generateRandomString, hashAndSaltPassword } from './utils/encryption';
 import Conversation from './Conversation';

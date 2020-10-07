@@ -1,5 +1,5 @@
-import DatabaseAccess from '../DatabaseAccess';
-import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from '../schema';
+import DatabaseAccess from '../../types/DatabaseAccess';
+import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from '../../types/schema';
 import { ErrorMessage } from '../../types/types';
 
 const host: string | undefined = process.env.DB_HOST;

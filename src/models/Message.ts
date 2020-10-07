@@ -1,6 +1,6 @@
-import DatabaseAccess from '../database/DatabaseAccess';
+import DatabaseAccess from '../types/DatabaseAccess';
 import MySQLDatabaseAccess from '../database/MySQLDatabaseAccess';
-import { MessageSchema } from '../database/schema';
+import { MessageSchema } from '../types/schema';
 import { encrypt, decrypt } from './utils/encryption';
 
 class Message {

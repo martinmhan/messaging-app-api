@@ -1,9 +1,9 @@
 import mysql from 'mysql';
 
 import { ErrorMessage } from '../types/types';
-import DatabaseAccess from './DatabaseAccess';
-import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from './schema';
-import queries from './queries';
+import DatabaseAccess from '../types/DatabaseAccess';
+import { UserSchema, ConversationSchema, MessageSchema, ConversationUserSchema } from '../types/schema';
+import { Query } from '../types/query';
 
 const host: string | undefined = process.env.DB_HOST;
 const user: string | undefined = process.env.DB_USER;
@@ -63,7 +63,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     });
   }
 
-  private runQuery(query: string, params: Array<unknown>): Promise<any> {
+  private runQuery(query: Query, params: Array<unknown>): Promise<any> {
     if (!this.connection) {
       return Promise.reject(new Error('connection is not set'));
     }
@@ -81,46 +81,46 @@ class MySQLDatabaseAccess implements DatabaseAccess {
 
   // User queries
   async insertUser(newUser: Omit<UserSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.insertUser, [newUser]);
+    const insertResult = await this.runQuery(Query.insertUser, [newUser]);
     return { insertId: insertResult.insertId };
   }
 
   async getUserById(userId: number): Promise<UserSchema> {
-    const [userRow] = await this.runQuery(queries.getUserById, [userId]);
+    const [userRow] = await this.runQuery(Query.getUserById, [userId]);
     return userRow;
   }
 
   async getUserByUserName(userName: string): Promise<UserSchema> {
-    const [userRow] = await this.runQuery(queries.getUserByUserName, [userName]);
+    const [userRow] = await this.runQuery(Query.getUserByUserName, [userName]);
     return userRow;
   }
 
   async getUsersByConversationId(conversationId: number): Promise<Array<UserSchema>> {
-    const userRows = await this.runQuery(queries.getUsersByConversationId, [conversationId]);
+    const userRows = await this.runQuery(Query.getUsersByConversationId, [conversationId]);
     return userRows;
   }
 
   async updateUser(fieldsToUpdate: Partial<Omit<UserSchema, 'id' | 'userName'>>, userId: number): Promise<void> {
-    await this.runQuery(queries.updateUser, [fieldsToUpdate, userId]);
+    await this.runQuery(Query.updateUser, [fieldsToUpdate, userId]);
   }
 
   async deleteUser(userId: number): Promise<void> {
-    await this.runQuery(queries.deleteUserById, [userId]);
+    await this.runQuery(Query.deleteUserById, [userId]);
   }
 
   // Conversation queries
   async insertConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.insertConversation, [newConversation]);
+    const insertResult = await this.runQuery(Query.insertConversation, [newConversation]);
     return { insertId: insertResult.insertId };
   }
 
   async getConversationById(conversationId: number): Promise<ConversationSchema> {
-    const [conversationRow] = await this.runQuery(queries.getConversationById, [conversationId]);
+    const [conversationRow] = await this.runQuery(Query.getConversationById, [conversationId]);
     return conversationRow;
   }
 
   async getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>> {
-    const conversationRows = await this.runQuery(queries.getConversationsByUserId, [userId]);
+    const conversationRows = await this.runQuery(Query.getConversationsByUserId, [userId]);
     return conversationRows;
   }
 
@@ -128,40 +128,40 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     fieldsToUpdate: Partial<Omit<ConversationSchema, 'id'>>,
     conversationId: number,
   ): Promise<void> {
-    await this.runQuery(queries.updateConversation, [fieldsToUpdate, conversationId]);
+    await this.runQuery(Query.updateConversation, [fieldsToUpdate, conversationId]);
   }
 
   async deleteConversation(conversationId: number): Promise<void> {
-    await this.runQuery(queries.deleteConversation, [conversationId]);
+    await this.runQuery(Query.deleteConversation, [conversationId]);
   }
 
   // ConversationUser queries
   async insertConversationUser(conversationUser: Omit<ConversationUserSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.insertConversationUser, [conversationUser]);
+    const insertResult = await this.runQuery(Query.insertConversationUser, [conversationUser]);
     return { insertId: insertResult.insertId };
   }
 
   async deleteConversationUser(conversationId: number, userId: number): Promise<void> {
-    await this.runQuery(queries.deleteConversationUser, [conversationId, userId]);
+    await this.runQuery(Query.deleteConversationUser, [conversationId, userId]);
   }
 
   async deleteConversationUsersByUserId(userId: number): Promise<void> {
-    await this.runQuery(queries.deleteConversationUsersByUserId, [userId]);
+    await this.runQuery(Query.deleteConversationUsersByUserId, [userId]);
   }
 
   // Message queries
   async insertMessage(newMessage: Omit<MessageSchema, 'id'>): Promise<{ insertId: number }> {
-    const insertResult = await this.runQuery(queries.insertMessage, [newMessage]);
+    const insertResult = await this.runQuery(Query.insertMessage, [newMessage]);
     return { insertId: insertResult.insertId };
   }
 
   async getMessageById(messageId: number): Promise<MessageSchema> {
-    const [messageRow] = await this.runQuery(queries.getMessageById, [messageId]);
+    const [messageRow] = await this.runQuery(Query.getMessageById, [messageId]);
     return messageRow;
   }
 
   async getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>> {
-    const messageRows = await this.runQuery(queries.getMessagesByConversationId, [conversationId]);
+    const messageRows = await this.runQuery(Query.getMessagesByConversationId, [conversationId]);
     return messageRows;
   }
 }
