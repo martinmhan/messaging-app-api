@@ -10,47 +10,32 @@ import Conversation from '../../src/models/Conversation';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('User API', () => {
-  let existingUser1: utils.UserInfo;
-  let existingUser2: utils.UserInfo;
-  let userToUpdate: utils.UserInfo;
-  let userToDelete: utils.UserInfo;
+  let testUser1: utils.UserInfo;
+  let testUser2: utils.UserInfo;
+  let createdUserId: number;
 
-  let existingUser1JsonWebToken: string;
-  let existingUser2JsonWebToken: string;
-  let userToUpdateJsonWebToken: string;
-  let userToDeleteJsonWebToken: string;
+  let testUser1JsonWebToken: string;
+  let testUser2JsonWebToken: string;
 
-  let userToCreateId: number;
+  let testConversation: Conversation;
 
-  let conversationToGet: Conversation;
-
-  beforeAll(async () => {
-    existingUser1 = await utils.createTestUser();
-    existingUser2 = await utils.createTestUser();
-    userToUpdate = await utils.createTestUser();
-    userToDelete = await utils.createTestUser();
-
-    existingUser1JsonWebToken = await utils.getJsonWebToken(app, existingUser1.userName, existingUser1.password);
-    existingUser2JsonWebToken = await utils.getJsonWebToken(app, existingUser2.userName, existingUser2.password);
-    userToUpdateJsonWebToken = await utils.getJsonWebToken(app, userToUpdate.userName, userToUpdate.password);
-    userToDeleteJsonWebToken = await utils.getJsonWebToken(app, userToDelete.userName, userToDelete.password);
-
-    conversationToGet = await utils.createTestConversation();
-    await conversationToGet.addUser(existingUser1.id);
+  beforeEach(async () => {
+    testUser1 = await utils.createTestUser();
+    testUser2 = await utils.createTestUser();
+    testUser1JsonWebToken = await utils.getJsonWebToken(app, testUser1.userName, testUser1.password);
+    testUser2JsonWebToken = await utils.getJsonWebToken(app, testUser2.userName, testUser2.password);
+    testConversation = await utils.createTestConversation();
+    testConversation.addUser(testUser1.id);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
-    await Promise.all([
-      mySQLDatabaseAccess.deleteUser(existingUser1.id),
-      mySQLDatabaseAccess.deleteUser(existingUser2.id),
-      mySQLDatabaseAccess.deleteUser(userToUpdate.id),
-      mySQLDatabaseAccess.deleteUser(userToDelete.id),
-      mySQLDatabaseAccess.deleteUser(userToCreateId),
-    ]);
+    await mySQLDatabaseAccess.deleteUser(testUser1.id);
+    await mySQLDatabaseAccess.deleteUser(testUser2.id);
+    await mySQLDatabaseAccess.deleteConversation(testConversation.getId());
   });
 
   describe('POST /api/user/login', () => {
@@ -61,7 +46,7 @@ describe('User API', () => {
     });
 
     it('should return 400 if incorrect credentials are provided', async () => {
-      const userNamePassword = `${existingUser1.userName}:Incorrect${existingUser1.password}`;
+      const userNamePassword = `${testUser1.userName}:Incorrect${testUser1.password}`;
       const userNamePasswordEncoded = Buffer.from(userNamePassword).toString('base64');
       const authorizationHeader = `Basic ${userNamePasswordEncoded}`;
 
@@ -73,7 +58,7 @@ describe('User API', () => {
     });
 
     it('should return a JSON web token when correct credentials are provided in the Authorization header', async () => {
-      const userNamePassword = `${existingUser1.userName}:${existingUser1.password}`;
+      const userNamePassword = `${testUser1.userName}:${testUser1.password}`;
       const userNamePasswordEncoded = Buffer.from(userNamePassword).toString('base64');
       const authorizationHeader = `Basic ${userNamePasswordEncoded}`;
 
@@ -111,7 +96,7 @@ describe('User API', () => {
 
     it('should return 400 if requesting to create a user with an existing userName', async () => {
       const userConfig = {
-        userName: existingUser1.userName,
+        userName: testUser1.userName,
         password: uuid.v4(),
         firstName: uuid.v4(),
         lastName: uuid.v4(),
@@ -150,43 +135,53 @@ describe('User API', () => {
         id: expect.any(Number),
       });
 
-      userToCreateId = response.body?.data?.id;
-      const createdUser = await User.findById(userToCreateId);
+      createdUserId = response.body?.data?.id;
+      const createdUser = await User.findById(createdUserId);
       expect(createdUser).toBeInstanceOf(User);
     });
   });
 
   describe('GET /api/user/:userId', () => {
     it('should return 401 when requesting without a JSON web token', async () => {
-      const response = await request(app).get(`/api/user/${existingUser1.id}`);
+      const response = await request(app).get(`/api/user/${testUser1.id}`);
       expect(response.status).toBe(401);
       expect(response.body?.data).toBeUndefined();
     });
 
     it('should return 403 when requesting with a JSON web token of a different user', async () => {
       const response = await request(app)
-        .get(`/api/user/${existingUser1.id}`)
-        .set('Authorization', `Bearer ${existingUser2JsonWebToken}`);
+        .get(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body?.error).not.toBeNull();
       expect(response.body?.data).toBeNull();
     });
 
+    it('should return 400 when requesting with an invalid userId', async () => {
+      const response = await request(app)
+        .get('/api/user/notANumber')
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`);
+
+      expect(response.status).toBe(400);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
     it('should return user information when requesting with a valid JSON web token', async () => {
       const response = await request(app)
-        .get(`/api/user/${existingUser1.id}`)
-        .set('Authorization', `Bearer ${existingUser1JsonWebToken}`);
+        .get(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body?.error).toBeNull();
       expect(response.body?.data).not.toBeNull();
       expect(response.body?.data).toStrictEqual({
-        userName: existingUser1.userName,
-        firstName: existingUser1.firstName,
-        lastName: existingUser1.lastName,
-        email: existingUser1.email,
-        id: existingUser1.id,
+        userName: testUser1.userName,
+        firstName: testUser1.firstName,
+        lastName: testUser1.lastName,
+        email: testUser1.email,
+        id: testUser1.id,
       });
     });
   });
@@ -198,7 +193,7 @@ describe('User API', () => {
 
     it('should return 401 when requesting without a JSON web token', async () => {
       const response = await request(app)
-        .patch(`/api/user/${userToUpdate.id}`)
+        .patch(`/api/user/${testUser1.id}`)
         .send({ fieldsToUpdate });
 
       expect(response.status).toBe(401);
@@ -207,8 +202,8 @@ describe('User API', () => {
 
     it('should return 403 when requesting with a JSON web token of a different user', async () => {
       const response = await request(app)
-        .patch(`/api/user/${userToUpdate.id}`)
-        .set('Authorization', `Bearer ${existingUser1JsonWebToken}`)
+        .patch(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`)
         .send({ fieldsToUpdate });
 
       expect(response.status).toBe(403);
@@ -218,8 +213,8 @@ describe('User API', () => {
 
     it('should return 400 when requesting without a fieldsToUpdate object in the request body', async () => {
       const response = await request(app)
-        .patch(`/api/user/${userToUpdate.id}`)
-        .set('Authorization', `Bearer ${userToUpdateJsonWebToken}`)
+        .patch(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`)
         .send({});
 
       expect(response.status).toBe(400);
@@ -229,28 +224,28 @@ describe('User API', () => {
 
     it('should update user information', async () => {
       const response = await request(app)
-        .patch(`/api/user/${userToUpdate.id}`)
-        .set('Authorization', `Bearer ${userToUpdateJsonWebToken}`)
+        .patch(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`)
         .send({ fieldsToUpdate });
 
       expect(response.status).toBe(200);
       expect(response.body?.error).toBeNull();
       expect(response.body?.data).toStrictEqual({
-        userName: userToUpdate.userName,
-        firstName: userToUpdate.firstName,
-        lastName: userToUpdate.lastName,
+        userName: testUser1.userName,
+        firstName: testUser1.firstName,
+        lastName: testUser1.lastName,
         email: fieldsToUpdate.email,
         id: expect.any(Number),
       });
 
-      const updatedUser = await User.findByUserName(userToUpdate.userName);
+      const updatedUser = await User.findByUserName(testUser1.userName);
       expect(updatedUser?.getEmail()).toBe(fieldsToUpdate.email);
     });
   });
 
-  describe('DELETE api/user', () => {
+  describe('PUT api/user/:userId/password', () => {
     it('should return 401 when requesting without a JSON web token', async () => {
-      const response = await request(app).delete(`/api/user/${userToDelete.id}`);
+      const response = await request(app).put(`/api/user/${testUser1.id}/password`);
 
       expect(response.status).toBe(401);
       expect(response.body?.data).toBeUndefined();
@@ -258,8 +253,51 @@ describe('User API', () => {
 
     it('should return 403 when requesting with a JSON web token of a different user', async () => {
       const response = await request(app)
-        .delete(`/api/user/${userToDelete.id}`)
-        .set('Authorization', `Bearer ${existingUser1JsonWebToken}`);
+        .put(`/api/user/${testUser1.id}/password`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
+    it('should return 400 when requesting without a newPassword', async () => {
+      const response = await request(app)
+        .put(`/api/user/${testUser1.id}/password`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 200 and update a user password', async () => {
+      const newPassword = uuid.v4();
+      const response = await request(app)
+        .put(`/api/user/${testUser1.id}/password`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`)
+        .send({ newPassword });
+
+      expect(response.status).toBe(200);
+      expect(response.body?.error).toBeNull();
+      expect(response.body?.data).not.toBeNull();
+
+      const user = await User.findById(testUser1.id);
+      expect(user?.validatePassword(newPassword)).toBe(true);
+    });
+  });
+
+  describe('DELETE api/user', () => {
+    it('should return 401 when requesting without a JSON web token', async () => {
+      const response = await request(app).delete(`/api/user/${testUser1.id}`);
+
+      expect(response.status).toBe(401);
+      expect(response.body?.data).toBeUndefined();
+    });
+
+    it('should return 403 when requesting with a JSON web token of a different user', async () => {
+      const response = await request(app)
+        .delete(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body?.error).not.toBeNull();
@@ -269,43 +307,53 @@ describe('User API', () => {
     it('should return 400 when requesting with an invalid userId param', async () => {
       const response = await request(app)
         .delete(`/api/user/invalidUserId`)
-        .set('Authorization', `Bearer ${userToDeleteJsonWebToken}`);
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`);
 
       expect(response.status).toBe(400);
     });
 
     it('should delete a user', async () => {
       const response = await request(app)
-        .delete(`/api/user/${userToDelete.id}`)
-        .set('Authorization', `Bearer ${userToDeleteJsonWebToken}`);
+        .delete(`/api/user/${testUser1.id}`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body?.error).toBeNull();
 
-      const deleteUser = await User.findByUserName(userToDelete.userName);
+      const deleteUser = await User.findById(testUser1.id);
       expect(deleteUser).toBeNull();
     });
   });
 
   describe('GET api/user/:userId/conversations', () => {
     it('should return 401 when requesting without a JSON web token', async () => {
-      const response = await request(app).get(`/api/user/${existingUser1.id}/conversations`);
+      const response = await request(app).get(`/api/user/${testUser1.id}/conversations`);
 
       expect(response.status).toBe(401);
       expect(response.body?.data).toBeUndefined();
     });
 
+    it('should return 403 when requesting conversations of a different user', async () => {
+      const response = await request(app)
+        .get(`/api/user/${testUser1.id}/conversations`)
+        .set('Authorization', `Bearer ${testUser2JsonWebToken}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body?.error).not.toBeNull();
+      expect(response.body?.data).toBeNull();
+    });
+
     it('should return 200 with the conversations the user is a member of', async () => {
       const response = await request(app)
-        .get(`/api/user/${existingUser1.id}/conversations`)
-        .set('Authorization', `Bearer ${existingUser1JsonWebToken}`);
+        .get(`/api/user/${testUser1.id}/conversations`)
+        .set('Authorization', `Bearer ${testUser1JsonWebToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body?.error).toBeNull();
       expect(response.body?.data).toStrictEqual([
         {
-          name: conversationToGet.getName(),
-          id: conversationToGet.getId(),
+          name: testConversation.getName(),
+          id: testConversation.getId(),
         },
       ]);
     });

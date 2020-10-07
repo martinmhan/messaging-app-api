@@ -6,18 +6,18 @@ import http from 'http';
 dotenv.config();
 
 import app from '../../src/app';
-import User from '../../src/models/User';
-import SocketServerContainer from '../../src/api/SocketServer';
+import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
+import SocketServer from '../../src/api/SocketServer';
 import Conversation from '../../src/models/Conversation';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('Web Socket Events', () => {
   const PORT = process.env.PORT || 8080;
   const server = http.createServer(app);
   const io = socketIo(server);
-  const socketServer = new SocketServerContainer(io);
+  const socketServer = new SocketServer(io);
   socketServer.addHandlers();
 
   server.listen(PORT);
@@ -49,8 +49,12 @@ describe('Web Socket Events', () => {
   });
 
   afterAll(async () => {
-    const user = await User.findById(user1.id);
-    await user?.delete();
+    const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
+    await mySQLDatabaseAccess.deleteConversation(conversation1.getId());
+    await mySQLDatabaseAccess.deleteConversation(conversation2.getId());
+    await mySQLDatabaseAccess.deleteUser(user1.id);
+    await mySQLDatabaseAccess.deleteUser(user2.id);
+
     server.close();
   });
 
@@ -89,6 +93,33 @@ describe('Web Socket Events', () => {
   });
 
   describe('Messages', () => {
+    it('should not broadcast a new message if the payload is missing information', done => {
+      socket1.emit('newMessage', { conversationId: conversation1.getId() });
+      socket2.on('newMessage', () => {
+        expect(true).toBe(false);
+      });
+
+      setTimeout(done, 1000);
+    });
+
+    it('should not broadcast a new message if the conversationId does not exist', done => {
+      socket1.emit('newMessage', { conversationId: -1 });
+      socket2.on('newMessage', () => {
+        expect(true).toBe(false);
+      });
+
+      setTimeout(done, 1000);
+    });
+
+    it('should not broadcast a new message if the user is not in the conversation', done => {
+      socket1.emit('newMessage', { conversationId: conversation2.getId() });
+      socket2.on('newMessage', () => {
+        expect(true).toBe(false);
+      });
+
+      setTimeout(done, 1000);
+    });
+
     it('should broadcast a new message to other sockets connected to the same room', done => {
       const newMessage = {
         conversationId: conversation1.getId(),

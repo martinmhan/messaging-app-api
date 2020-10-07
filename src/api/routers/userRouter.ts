@@ -4,6 +4,7 @@ import LoginUser from '../controllers/LoginUser';
 import CreateUser from '../controllers/CreateUser';
 import GetUser from '../controllers/GetUser';
 import UpdateUser from '../controllers/UpdateUser';
+import UpdateUserPassword from '../controllers/UpdateUserPassword';
 import DeleteUser from '../controllers/DeleteUser';
 import GetUserConversations from '../controllers/GetUserConversations';
 
@@ -14,6 +15,7 @@ userRouter.useControllers([
   new CreateUser(HTTPMethod.POST, '/'),
   new GetUser(HTTPMethod.GET, '/:userId'),
   new UpdateUser(HTTPMethod.PATCH, '/:userId'),
+  new UpdateUserPassword(HTTPMethod.PUT, '/:userId/password'),
   new DeleteUser(HTTPMethod.DELETE, '/:userId'),
   new GetUserConversations(HTTPMethod.GET, '/:userId/conversations'),
 ]);

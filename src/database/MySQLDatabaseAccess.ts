@@ -63,7 +63,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     });
   }
 
-  private runQuery(query: Query, params: Array<unknown>): Promise<any> {
+  private runQuery(query: Query, params: unknown[]): Promise<any> {
     if (!this.connection) {
       return Promise.reject(new Error('connection is not set'));
     }
@@ -95,7 +95,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     return userRow;
   }
 
-  async getUsersByConversationId(conversationId: number): Promise<Array<UserSchema>> {
+  async getUsersByConversationId(conversationId: number): Promise<UserSchema[]> {
     const userRows = await this.runQuery(Query.getUsersByConversationId, [conversationId]);
     return userRows;
   }
@@ -119,7 +119,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     return conversationRow;
   }
 
-  async getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>> {
+  async getConversationsByUserId(userId: number): Promise<ConversationSchema[]> {
     const conversationRows = await this.runQuery(Query.getConversationsByUserId, [userId]);
     return conversationRows;
   }
@@ -160,7 +160,7 @@ class MySQLDatabaseAccess implements DatabaseAccess {
     return messageRow;
   }
 
-  async getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>> {
+  async getMessagesByConversationId(conversationId: number): Promise<MessageSchema[]> {
     const messageRows = await this.runQuery(Query.getMessagesByConversationId, [conversationId]);
     return messageRows;
   }

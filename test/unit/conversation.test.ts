@@ -7,45 +7,45 @@ import Conversation from '../../src/models/Conversation';
 import MySQLDatabaseAccess from '../../src/database/MySQLDatabaseAccess';
 import * as utils from '../utils';
 
-jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to use the real database
+jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use a mock DB (NOTE - behavior may differ from real DB)
 
 describe('Conversation model', () => {
   const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
 
-  let conversationToCreateId: number;
-  let conversationToGet: Conversation;
-  let conversationToUpdate: Conversation;
+  let testConversation: Conversation;
+  let createdConversation: Conversation;
 
-  beforeAll(async () => {
-    conversationToGet = await utils.createTestConversation();
-    conversationToUpdate = await utils.createTestConversation();
+  beforeEach(async () => {
+    testConversation = await utils.createTestConversation();
   });
 
-  afterAll(async () => {
-    await Promise.all([
-      mySQLDatabaseAccess.deleteConversation(conversationToCreateId),
-      mySQLDatabaseAccess.deleteConversation(conversationToGet.getId()),
-      mySQLDatabaseAccess.deleteConversation(conversationToUpdate.getId()),
-    ]);
+  afterEach(async () => {
+    await mySQLDatabaseAccess.deleteConversation(testConversation.getId());
+    await mySQLDatabaseAccess.deleteConversation(createdConversation.getId());
   });
 
   it('should create a new conversation', async () => {
     const conversationConfig = { name: uuid.v4() };
     const conversation = await Conversation.create(conversationConfig);
-    conversationToCreateId = conversation.getId();
-    const conversationRow = await mySQLDatabaseAccess.getConversationById(conversationToCreateId);
+    createdConversation = conversation;
+    const conversationRow = await mySQLDatabaseAccess.getConversationById(createdConversation.getId());
     expect(conversationRow).toMatchObject({
-      id: conversationToCreateId,
+      id: createdConversation.getId(),
       name: expect.any(String),
     });
   });
 
+  it('should return null when finding a nonexistent conversationId', async () => {
+    const conversation = await Conversation.findById(-1);
+    expect(conversation).toBeNull();
+  });
+
   it('should get an existing conversation by id', async () => {
-    const conversation = await Conversation.findById(conversationToGet.getId());
+    const conversation = await Conversation.findById(testConversation.getId());
     expect(conversation).toBeInstanceOf(Conversation);
     expect(conversation).toMatchObject({
-      id: conversationToGet.getId(),
-      name: conversationToGet.getName(),
+      id: testConversation.getId(),
+      name: testConversation.getName(),
       users: null,
       messages: null,
     });
@@ -53,7 +53,7 @@ describe('Conversation model', () => {
 
   it('should update an existing conversation', async () => {
     const fieldsToUpdate = { name: uuid.v4() };
-    const conversation = await Conversation.findById(conversationToUpdate.getId());
+    const conversation = await Conversation.findById(testConversation.getId());
     await conversation?.update(fieldsToUpdate);
     expect(conversation?.getName()).toEqual(fieldsToUpdate.name);
   });

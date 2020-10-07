@@ -45,7 +45,7 @@ class Message {
     }
   }
 
-  static async findByConversationId(conversationId: number): Promise<Array<Message>> {
+  static async findByConversationId(conversationId: number): Promise<Message[]> {
     try {
       const databaseRows = await this.databaseAccess.getMessagesByConversationId(conversationId);
       const messages = databaseRows.map(this.dataMapper);

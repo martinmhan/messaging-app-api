@@ -22,16 +22,16 @@ class User {
   }
 
   static async create(
-    newUser: Omit<UserSchema, 'id' | 'passwordHash' | 'passwordSalt'> & { password: string },
+    userConfig: Omit<UserSchema, 'id' | 'passwordHash' | 'passwordSalt'> & { password: string },
   ): Promise<User> {
     try {
       const passwordSalt = generateRandomString(16);
-      const passwordHash = hashAndSaltPassword(newUser.password, passwordSalt);
+      const passwordHash = hashAndSaltPassword(userConfig.password, passwordSalt);
       const insert = {
-        userName: encrypt(newUser.userName),
-        firstName: encrypt(newUser.firstName),
-        lastName: encrypt(newUser.lastName),
-        email: encrypt(newUser.email),
+        userName: encrypt(userConfig.userName),
+        firstName: encrypt(userConfig.firstName),
+        lastName: encrypt(userConfig.lastName),
+        email: encrypt(userConfig.email),
         passwordHash: Buffer.from(passwordHash),
         passwordSalt: Buffer.from(passwordSalt),
       };
@@ -74,7 +74,7 @@ class User {
     }
   }
 
-  static async findByConversationId(conversationId: number): Promise<Array<User>> {
+  static async findByConversationId(conversationId: number): Promise<User[]> {
     try {
       const databaseRows = await this.databaseAccess.getUsersByConversationId(conversationId);
       const users = databaseRows.map(this.dataMapper);
@@ -85,40 +85,64 @@ class User {
     }
   }
 
-  private id: number;
+  private id: number | null;
   private userName: string;
   private firstName: string;
   private lastName: string;
   private email: string;
   private passwordHash: string;
   private passwordSalt: string;
-  private conversations: Array<Conversation> | null = null;
+  private conversations: Conversation[] | null = null;
 
   private constructor() {
     // Instantiation is restricted to static methods
   }
 
   getId = (): number => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     return this.id;
   };
 
   getUserName = (): string => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     return this.userName;
   };
 
   getFirstName = (): string => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     return this.firstName;
   };
 
   getLastName = (): string => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     return this.lastName;
   };
 
   getEmail = (): string => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     return this.email;
   };
 
   truncate = (): { id: number; userName: string; firstName: string; lastName: string; email: string } => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     return {
       id: this.id,
       userName: this.userName,
@@ -129,6 +153,10 @@ class User {
   };
 
   validatePassword = (passwordAttempt: string): boolean => {
+    if (!this.id) {
+      throw new Error(ErrorMessage.USER_DOES_NOT_EXIST);
+    }
+
     if (!this.passwordSalt) {
       return false;
     }
@@ -191,12 +219,14 @@ class User {
         User.databaseAccess.deleteUser(this.id),
         User.databaseAccess.deleteConversationUsersByUserId(this.id),
       ]);
+
+      this.id = null;
     } catch (error) {
       return Promise.reject(error);
     }
   };
 
-  getConversations = async (): Promise<Array<Conversation>> => {
+  getConversations = async (): Promise<Conversation[]> => {
     if (!this.id) {
       return Promise.reject(ErrorMessage.USER_DOES_NOT_EXIST);
     }

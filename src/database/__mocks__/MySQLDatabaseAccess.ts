@@ -26,11 +26,11 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
     // Instantiation is restricted to getInstance method
   }
 
-  private mockDatabase: {
-    user: Array<UserSchema>;
-    conversation: Array<ConversationSchema>;
-    message: Array<MessageSchema>;
-    conversationUser: Array<{ id: number; userId: number; conversationId: number }>;
+  private readonly mockDatabase: {
+    user: UserSchema[];
+    conversation: ConversationSchema[];
+    message: MessageSchema[];
+    conversationUser: { id: number; userId: number; conversationId: number }[];
   } = {
     user: [],
     conversation: [],
@@ -69,7 +69,7 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
     return userRow;
   }
 
-  async getUsersByConversationId(conversationId: number): Promise<Array<UserSchema>> {
+  async getUsersByConversationId(conversationId: number): Promise<UserSchema[]> {
     const userIds = this.mockDatabase.conversationUser
       .filter(conversationUser => conversationUser.conversationId === conversationId)
       .map(conversationUser => conversationUser.userId);
@@ -98,11 +98,11 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   // Conversation queries
-  async insertConversation(newConversation: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
+  async insertConversation(conversationConfig: Omit<ConversationSchema, 'id'>): Promise<{ insertId: number }> {
     const [lastConversation] = this.mockDatabase.conversation.slice(-1);
     const lastConversationId = lastConversation?.id || 0;
     const insert = {
-      ...newConversation,
+      ...conversationConfig,
       id: lastConversationId + 1,
     };
 
@@ -116,7 +116,7 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
     return conversationRow;
   }
 
-  async getConversationsByUserId(userId: number): Promise<Array<ConversationSchema>> {
+  async getConversationsByUserId(userId: number): Promise<ConversationSchema[]> {
     const conversationIds = this.mockDatabase.conversationUser
       .filter(conversationUser => conversationUser.userId === userId)
       .map(conversationUser => conversationUser.conversationId);
@@ -137,13 +137,11 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   async deleteConversation(conversationId: number): Promise<void> {
-    for (let i = 0; i < this.mockDatabase.conversation.length; i += 1) {
-      const conversation = this.mockDatabase.conversation[i];
-      if (conversation.id === conversationId) {
-        this.mockDatabase.conversation.splice(i, 1);
-        break;
-      }
-    }
+    this.mockDatabase.conversation = this.mockDatabase.conversation.filter(c => c.id !== conversationId);
+    this.mockDatabase.message = this.mockDatabase.message.filter(m => m.conversationId !== conversationId);
+    this.mockDatabase.conversationUser = this.mockDatabase.conversationUser.filter(
+      u => u.conversationId !== conversationId,
+    );
   }
 
   // ConversationUser queries
@@ -161,13 +159,9 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   async deleteConversationUser(conversationId: number, userId: number): Promise<void> {
-    for (let i = 0; i < this.mockDatabase.conversationUser.length; i += 1) {
-      const conversationUser = this.mockDatabase.conversationUser[i];
-      if (conversationUser.conversationId === conversationId && conversationUser.userId === userId) {
-        this.mockDatabase.conversationUser.splice(i, 1);
-        break;
-      }
-    }
+    this.mockDatabase.conversationUser = this.mockDatabase.conversationUser.filter(
+      u => u.conversationId !== conversationId || u.userId !== userId,
+    );
   }
 
   async deleteConversationUsersByUserId(userId: number): Promise<void> {
@@ -198,7 +192,7 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
     return messageRow;
   }
 
-  async getMessagesByConversationId(conversationId: number): Promise<Array<MessageSchema>> {
+  async getMessagesByConversationId(conversationId: number): Promise<MessageSchema[]> {
     const messageRows = this.mockDatabase.message.filter(m => m.conversationId === conversationId);
     return messageRows;
   }
