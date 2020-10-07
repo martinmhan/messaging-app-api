@@ -18,7 +18,7 @@ class LoginUser extends BaseController {
     this.jwtKey = jwtKey;
   }
 
-  async handleRequest(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
+  async handler(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
     const authorizationHeader: string | undefined = req.headers.authorization;
     if (!authorizationHeader) {
       return this.format(StatusCode.badRequest, ErrorMessage.UNSUCCESSFUL_LOGIN);

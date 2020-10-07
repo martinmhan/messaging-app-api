@@ -4,7 +4,7 @@ import { StatusCode, JSONResponse, ErrorMessage } from '../../types/types';
 import BaseController from '../BaseController';
 
 class GetUser extends BaseController {
-  async handleRequest(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
+  async handler(req: Request): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }> {
     const { userId } = req.params;
 
     const userIdInt = parseInt(userId);

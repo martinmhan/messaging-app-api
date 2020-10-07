@@ -11,7 +11,7 @@ abstract class BaseController {
     this.path = path;
   }
 
-  // util function to format return value in handleRequest
+  // util function to format handler's return value
   format(
     statusCode: StatusCode,
     error: ErrorMessage | null,
@@ -28,14 +28,14 @@ abstract class BaseController {
     };
   }
 
-  abstract handleRequest(
+  abstract handler(
     request: Request,
     response?: Response,
     next?: NextFunction,
   ): Promise<{ statusCode: StatusCode; jsonResponse: JSONResponse }>;
 
   execute = async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-    const { statusCode, jsonResponse } = await this.handleRequest(request, response, next);
+    const { statusCode, jsonResponse } = await this.handler(request, response, next);
     return response.status(statusCode).send(jsonResponse);
   };
 }
