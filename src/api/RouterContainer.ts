@@ -14,7 +14,7 @@ class RouterContainer {
     this.router.use(path, routerContainer.router);
   }
 
-  useControllers(controllers: Array<BaseController>): void {
+  useControllers(controllers: BaseController[]): void {
     controllers.forEach((controller: BaseController) => {
       switch (controller.httpMethod) {
         case HTTPMethod.POST:

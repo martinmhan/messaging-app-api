@@ -17,9 +17,9 @@ class Conversation {
     return conversation;
   }
 
-  static async create(newConversation: Omit<ConversationSchema, 'id'>): Promise<Conversation> {
+  static async create(conversationConfig: Omit<ConversationSchema, 'id'>): Promise<Conversation> {
     try {
-      const insert = { name: encrypt(newConversation.name) };
+      const insert = { name: encrypt(conversationConfig.name) };
       const { insertId } = await this.databaseAccess.insertConversation(insert);
       const conversation = this.dataMapper({ id: insertId, ...insert });
 
@@ -44,7 +44,7 @@ class Conversation {
     }
   }
 
-  static async findByUserId(userId: number): Promise<Array<Conversation>> {
+  static async findByUserId(userId: number): Promise<Conversation[]> {
     try {
       const databaseRows = await this.databaseAccess.getConversationsByUserId(userId);
       const conversations = databaseRows.map(this.dataMapper);
@@ -57,8 +57,8 @@ class Conversation {
 
   private id: number;
   private name: string;
-  private users: Array<User> | null = null;
-  private messages: Array<Message> | null = null;
+  private users: User[] | null = null;
+  private messages: Message[] | null = null;
 
   private constructor() {
     // Instantiation is restricted to static methods
@@ -96,7 +96,7 @@ class Conversation {
     }
   };
 
-  getUsers = async (): Promise<Array<User>> => {
+  getUsers = async (): Promise<User[]> => {
     if (!this.id) {
       return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
@@ -142,7 +142,7 @@ class Conversation {
     }
   };
 
-  getMessages = async (): Promise<Array<Message>> => {
+  getMessages = async (): Promise<Message[]> => {
     if (!this.id) {
       return Promise.reject(new Error(ErrorMessage.CONVO_DOES_NOT_EXIST));
     }
