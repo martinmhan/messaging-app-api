@@ -1,9 +1,9 @@
 import socketIo from 'socket.io';
 import jwt from 'jsonwebtoken';
 
-import { ErrorMessage } from '../../types/types';
-import User from '../../models/User';
-import Conversation from '../../models/Conversation';
+import { ErrorMessage } from '../types/types';
+import User from '../models/User';
+import Conversation from '../models/Conversation';
 
 class SocketServer {
   private static events = {

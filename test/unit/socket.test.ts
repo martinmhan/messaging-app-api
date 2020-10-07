@@ -7,7 +7,7 @@ dotenv.config();
 
 import app from '../../src/app';
 import User from '../../src/models/User';
-import SocketServerContainer from '../../src/controllers/socket/SocketServer';
+import SocketServerContainer from '../../src/api/SocketServer';
 import Conversation from '../../src/models/Conversation';
 import * as utils from '../utils';
 
