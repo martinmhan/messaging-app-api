@@ -40,15 +40,10 @@
   - Database security via text encryption and hashed/salted passwords
     - Encryption algorithm uses both a secret key and an initialization vector
   - Tests
-    - Functional and unit tests for API and web socket server (85%+ coverage)
-    - Option to mock the database using a mock DAO
+    - Functional and unit tests for API, web socket, and domain (90%+ coverage)
+    - Option to mock the database for faster tests
   - Code linting with pre-commit hooks via ESLint/Prettier
   - Automated Tests via CircleCI
-
-### TBD
-  - Accompanying mobile client (iOS Swift)
-  - Message queue (RabbitMQ?)
-  - Load testing
 
 ### Notes:
   - The `BaseController` and `RouterContainer` classes (along with /types/types.ts) were built to strictly enforce specific protocols in handling requests/responses (as opposed to using stray request handler functions passed into an `Express.Router` instance). Namely, the response body must follow the `JSONResponse` interface, and error messages/status codes are pre-defined.
