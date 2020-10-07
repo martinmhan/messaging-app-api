@@ -1,7 +1,7 @@
 import RouterContainer from './RouterContainer';
-import authenticationHandler from './authentication';
-import userRouter from './userRouter';
-import conversationRouter from './conversationRouter';
+import authenticationHandler from './controllers/Authentication';
+import userRouter from './routers/userRouter';
+import conversationRouter from './routers/conversationRouter';
 
 const apiRouter = new RouterContainer();
 apiRouter.useHandler('*', authenticationHandler);

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, Router } from 'express';
 
-import { HTTPMethod } from '../../types/types';
+import { HTTPMethod } from '../types/types';
 import BaseController from './BaseController';
 
 class RouterContainer {

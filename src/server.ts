@@ -5,7 +5,7 @@ import socketIo from 'socket.io';
 dotenv.config();
 
 import app from './app';
-import SocketServer from './controllers/socket/SocketServer';
+import SocketServer from './api/SocketServer';
 
 const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
