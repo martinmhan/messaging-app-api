@@ -12,24 +12,15 @@ jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // comment this line to 
 describe('User model', () => {
   const mySQLDatabaseAccess = MySQLDatabaseAccess.getInstance();
 
-  let userToCreateId: number;
-  let userToGet: utils.UserInfo;
-  let userToUpdate: utils.UserInfo;
-  let userToDelete: utils.UserInfo;
+  let testUser: utils.UserInfo;
+  let createdUserId: number;
 
-  beforeAll(async () => {
-    userToGet = await utils.createTestUser();
-    userToUpdate = await utils.createTestUser();
-    userToDelete = await utils.createTestUser();
+  beforeEach(async () => {
+    testUser = await utils.createTestUser();
   });
 
-  afterAll(async () => {
-    await Promise.all([
-      mySQLDatabaseAccess.deleteUser(userToCreateId),
-      mySQLDatabaseAccess.deleteUser(userToGet.id),
-      mySQLDatabaseAccess.deleteUser(userToUpdate.id),
-      mySQLDatabaseAccess.deleteUser(userToDelete.id),
-    ]);
+  afterEach(async () => {
+    await mySQLDatabaseAccess.deleteUser(testUser.id);
   });
 
   it('should create a new user', async () => {
@@ -42,8 +33,9 @@ describe('User model', () => {
     };
 
     const user = await User.create(userConfig);
-    userToCreateId = user.getId();
-    const userRow = await mySQLDatabaseAccess.getUserById(userToCreateId);
+    createdUserId = user.getId();
+
+    const userRow = await mySQLDatabaseAccess.getUserById(createdUserId);
     expect(userRow).toMatchObject({
       id: expect.any(Number),
       userName: expect.any(String),
@@ -56,14 +48,14 @@ describe('User model', () => {
   });
 
   it('should get an existing user by id', async () => {
-    const user = await User.findById(userToGet.id);
+    const user = await User.findById(testUser.id);
     expect(user).toBeInstanceOf(User);
     expect(user).toMatchObject({
-      id: userToGet.id,
-      userName: userToGet.userName,
-      firstName: userToGet.firstName,
-      lastName: userToGet.lastName,
-      email: userToGet.email,
+      id: testUser.id,
+      userName: testUser.userName,
+      firstName: testUser.firstName,
+      lastName: testUser.lastName,
+      email: testUser.email,
       passwordHash: expect.any(String),
       passwordSalt: expect.any(String),
       conversations: null,
@@ -71,14 +63,14 @@ describe('User model', () => {
   });
 
   it('should get an existing user by userName', async () => {
-    const user = await User.findByUserName(userToGet.userName);
+    const user = await User.findByUserName(testUser.userName);
     expect(user).toBeInstanceOf(User);
     expect(user).toMatchObject({
-      id: userToGet.id,
-      userName: userToGet.userName,
-      firstName: userToGet.firstName,
-      lastName: userToGet.lastName,
-      email: userToGet.email,
+      id: testUser.id,
+      userName: testUser.userName,
+      firstName: testUser.firstName,
+      lastName: testUser.lastName,
+      email: testUser.email,
       passwordHash: expect.any(String),
       passwordSalt: expect.any(String),
       conversations: null,
@@ -87,27 +79,51 @@ describe('User model', () => {
 
   it('should return null when searching for a nonexistent userId', async () => {
     const user = await User.findById(0);
-    expect(user).not.toBeInstanceOf(User);
     expect(user).toBeNull();
   });
 
   it('should return null when searching for a nonexistent userName', async () => {
     const user = await User.findByUserName(uuid.v4());
-    expect(user).not.toBeInstanceOf(User);
     expect(user).toBeNull();
   });
 
   it('should update an existing user', async () => {
-    const user = await User.findById(userToUpdate.id);
+    const user = await User.findById(testUser.id);
     const fieldsToUpdate = { firstName: uuid.v4() };
     await user?.update(fieldsToUpdate);
     expect(user?.getFirstName()).toEqual(fieldsToUpdate.firstName);
   });
 
-  it('should delete an existing user', async () => {
-    const user = await User.findById(userToDelete.id);
+  it('should throw an error when attempting to update a deleted user', async () => {
+    const user = await User.findById(testUser.id);
     await user?.delete();
-    const userRow = await mySQLDatabaseAccess.getUserById(userToDelete.id);
+
+    try {
+      const fieldsToUpdate = { firstName: uuid.v4() };
+      await user?.update(fieldsToUpdate);
+    } catch (error) {
+      expect(error).toBeDefined();
+    }
+  });
+
+  it('should delete an existing user', async () => {
+    const user = await User.findById(testUser.id);
+    await user?.delete();
+    const userRow = await mySQLDatabaseAccess.getUserById(testUser.id);
     expect(userRow).toBeUndefined();
+  });
+
+  it('should throw an error when attempting to delete an already deleted user', async () => {
+    const user = await User.findById(testUser.id);
+    await user?.delete();
+
+    const userRow = await mySQLDatabaseAccess.getUserById(testUser.id);
+    expect(userRow).toBeUndefined();
+
+    try {
+      await user?.delete();
+    } catch (error) {
+      expect(error).toBeDefined();
+    }
   });
 });

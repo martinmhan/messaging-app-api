@@ -28,9 +28,7 @@ export const createTestUser = async (): Promise<UserInfo> => {
 };
 
 export const createTestConversation = async (): Promise<Conversation> => {
-  const conversationConfig = {
-    name: uuid.v4(),
-  };
+  const conversationConfig = { name: uuid.v4() };
   const conversation = await Conversation.create(conversationConfig);
 
   return conversation;
