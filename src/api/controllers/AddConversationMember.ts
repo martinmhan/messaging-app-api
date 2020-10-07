@@ -2,6 +2,7 @@ import { Request } from 'express';
 
 import { StatusCode, JSONResponse, ErrorMessage } from '../../types/types';
 import Conversation from '../../models/Conversation';
+import User from '../../models/User';
 import BaseController from '../BaseController';
 
 class AddConversationMember extends BaseController {
@@ -34,9 +35,14 @@ class AddConversationMember extends BaseController {
         return this.format(StatusCode.forbidden, ErrorMessage.UNAUTHORIZED);
       }
 
+      const doesUserToAddExist = await User.findById(userIdToAdd);
+      if (!doesUserToAddExist) {
+        return this.format(StatusCode.badRequest, ErrorMessage.USER_DOES_NOT_EXIST);
+      }
+
       const isUserToAddAlreadyInConversation = await conversation.checkIfHasUser(userIdToAdd);
       if (isUserToAddAlreadyInConversation) {
-        return this.format(StatusCode.forbidden, ErrorMessage.USER_ALREADY_IN_CONVO);
+        return this.format(StatusCode.badRequest, ErrorMessage.USER_ALREADY_IN_CONVO);
       }
 
       await conversation.addUser(userIdToAdd);
