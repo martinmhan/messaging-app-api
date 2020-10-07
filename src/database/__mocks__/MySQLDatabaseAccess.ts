@@ -159,13 +159,9 @@ class MySQLDatabaseAccessMock implements DatabaseAccess {
   }
 
   async deleteConversationUser(conversationId: number, userId: number): Promise<void> {
-    for (let i = 0; i < this.mockDatabase.conversationUser.length; i += 1) {
-      const conversationUser = this.mockDatabase.conversationUser[i];
-      if (conversationUser.conversationId === conversationId && conversationUser.userId === userId) {
-        this.mockDatabase.conversationUser.splice(i, 1);
-        break;
-      }
-    }
+    this.mockDatabase.conversationUser = this.mockDatabase.conversationUser.filter(
+      u => u.conversationId !== conversationId || u.userId !== userId,
+    );
   }
 
   async deleteConversationUsersByUserId(userId: number): Promise<void> {
