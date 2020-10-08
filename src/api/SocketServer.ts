@@ -1,4 +1,5 @@
 import socketIo from 'socket.io';
+import http from 'http';
 import jwt from 'jsonwebtoken';
 
 import { ErrorMessage } from '../types/types';
@@ -24,8 +25,8 @@ class SocketServer {
   private io: socketIo.Server;
   private jwtKey: string;
 
-  constructor(io: socketIo.Server) {
-    this.io = io;
+  constructor(server: http.Server) {
+    this.io = socketIo(server);
 
     const jwtKey = process.env.JWT_KEY;
     if (!jwtKey) {
@@ -137,7 +138,7 @@ class SocketServer {
     });
   };
 
-  addHandlers(): void {
+  init(): void {
     this.io.use(this.authenticateSocket);
     this.io.on(SocketServer.events.CONNECTION, this.handleConnection);
   }

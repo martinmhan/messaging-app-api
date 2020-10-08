@@ -1,4 +1,3 @@
-import socketIo from 'socket.io';
 import socketIoClient from 'socket.io-client';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -16,9 +15,9 @@ jest.mock('../../src/database/MySQLDatabaseAccess.ts'); // Use this line to use 
 describe('Web Socket Events', () => {
   const PORT = process.env.PORT || 8080;
   const server = http.createServer(app);
-  const io = socketIo(server);
-  const socketServer = new SocketServer(io);
-  socketServer.addHandlers();
+
+  const socketServer = new SocketServer(server);
+  socketServer.init();
 
   server.listen(PORT);
 
