@@ -35,7 +35,7 @@ describe('Conversation model', () => {
     });
   });
 
-  it('should return null when finding a nonexistent conversationId', async () => {
+  it('should return null when searching for a nonexistent conversationId', async () => {
     const conversation = await Conversation.findById(-1);
     expect(conversation).toBeNull();
   });
