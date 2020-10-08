@@ -47,12 +47,12 @@ describe('User model', () => {
     });
   });
 
-  it('should return null when finding a nonexistent userId', async () => {
+  it('should return null when searching for a nonexistent userId', async () => {
     const user = await User.findById(-1);
     expect(user).toBeNull();
   });
 
-  it('should return null when finding a nonexistent userName', async () => {
+  it('should return null when searching for a nonexistent userName', async () => {
     const user = await User.findByUserName(uuid.v4());
     expect(user).toBeNull();
   });
@@ -85,16 +85,6 @@ describe('User model', () => {
       passwordSalt: expect.any(String),
       conversations: null,
     });
-  });
-
-  it('should return null when searching for a nonexistent userId', async () => {
-    const user = await User.findById(0);
-    expect(user).toBeNull();
-  });
-
-  it('should return null when searching for a nonexistent userName', async () => {
-    const user = await User.findByUserName(uuid.v4());
-    expect(user).toBeNull();
   });
 
   it('should update an existing user', async () => {
