@@ -25,7 +25,7 @@
   - REST API with layered architecture, following Domain-Driven Design and OOP principles
     - Application Layer (`/api`)
       - Logic is limited to handling client requests (e.g., checking authorizations, request parameters)
-      - Custom wrapper classes used to enforce standard request/response rules,ti organize controllers, and encapsulate socket server logic
+      - Custom wrapper classes used to enforce standard request/response rules, organize controllers, and encapsulate socket server logic
     - Domain Layer (`/models`)
       - Business object classes that encapsulate domain logic
       - Contain no knowledge of clients or underlying database operations
