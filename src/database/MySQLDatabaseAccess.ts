@@ -30,19 +30,10 @@ class MySQLDatabaseAccess implements DatabaseAccess {
   }
 
   private connection: mysql.Connection;
-  private connectionConfig: mysql.ConnectionConfig;
 
-  setConnectionConfig(connectionConfig: mysql.ConnectionConfig): void {
-    this.connectionConfig = connectionConfig;
-  }
-
-  connect(): Promise<void> {
-    if (!this.connectionConfig) {
-      return Promise.reject(new Error('connectionConfig is not set'));
-    }
-
+  connect(connectionConfig: mysql.ConnectionConfig): Promise<void> {
     this.connection?.end();
-    this.connection = mysql.createConnection(this.connectionConfig);
+    this.connection = mysql.createConnection(connectionConfig);
 
     return new Promise((resolve, reject) => {
       this.connection?.connect((error: mysql.MysqlError) => {
@@ -166,7 +157,6 @@ class MySQLDatabaseAccess implements DatabaseAccess {
   }
 }
 
-MySQLDatabaseAccess.getInstance().setConnectionConfig({ host, user, password, database });
-MySQLDatabaseAccess.getInstance().connect();
+MySQLDatabaseAccess.getInstance().connect({ host, user, password, database });
 
 export default MySQLDatabaseAccess;
