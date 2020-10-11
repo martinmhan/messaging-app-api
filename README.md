@@ -30,7 +30,8 @@
       - Business object classes that encapsulate domain logic
       - Contain no knowledge of clients or underlying database operations
     - Infrastructure Layer (`/database`)
-      - Data Access Object singleton class that serves as gateway for all database interactions
+      - Data Access Object interface injected as a dependency into domain layer models
+      - DAO interface implemented with MySQL as a singleton class serving as gateway for all database interactions
       - Logic is limited to running queries
   - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
     - JWTs obtained via Basic Access Authentication login
