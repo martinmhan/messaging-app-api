@@ -16,7 +16,8 @@
 
 ### Setup:
   - Clone the repository (`git clone https://www.github.com/martinmhan/messaging-app-api-typescript`)
-  - Set up MySQL database tables (run /src/database/upgrade.sh)
+  - Create a `.env` file following the `.env.example`
+  - Set up MySQL database tables (in the terminal, navigate to src/database and run `upgrade.sh`)
   - Install dependencies (`yarn` from project directory)
   - Run JavaScript build (`yarn build`)
   - Start server (`yarn start`)
