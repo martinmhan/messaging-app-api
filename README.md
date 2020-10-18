@@ -23,7 +23,7 @@
   - Start server (`yarn start`)
 
 ### Features:
-  - REST API with layered architecture, following Domain-Driven Design and OOP principles
+  - REST API with layered architecture, following [Domain-Driven Design](https://en.wikipedia.org/wiki/Domain-driven_design) and OOP principles
     - Application Layer (`/api`)
       - Logic is limited to handling client requests (e.g., checking authorizations, request parameters)
       - Custom wrapper classes used to enforce standard request/response rules, organize controllers, and encapsulate socket server logic
@@ -35,7 +35,7 @@
       - Logic is limited to running queries
   - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
     - JWTs obtained via Basic Access Authentication login
-  - Custom implementation of Active Record Pattern
+  - Custom implementation of [Active Record Pattern](https://en.wikipedia.org/wiki/Active_record_pattern)
     - Business objects (`User`, `Conversation`, and `Message`) can only be instantiated or mutated via methods that first query the database
   - Tests
     - Functional and unit tests for API, web socket, and domain objects (90%+ coverage)
@@ -43,13 +43,7 @@
   - Database
     - Encrypted text fields and hashed/salted passwords
     - Scripts set up to easily upgrade to the latest database version
-  - Code linting with pre-commit hooks via ESLint/Prettier
-  - Automated Tests via CircleCI
 
 ### Resources:
-  - https://www.typescriptlang.org/docs/
-  - https://jestjs.io/docs/en/getting-started
-  - https://socket.io/docs/
   - https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ddd-oriented-microservice
-  - https://github.com/microsoft/TypeScript-Node-Starter
   - https://jsonapi.org/
