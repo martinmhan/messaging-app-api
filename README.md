@@ -33,7 +33,7 @@
     - Infrastructure Layer (`/database`)
       - Data Access Object interface implemented with MySQL serving as gateway for all database interactions used by domain layer models
       - Logic is limited to running queries
-  - Stateless authentication via JSON Web Tokens (for both API requests and socket connections)
+  - Stateless authentication via JSON Web Tokens
     - JWTs obtained via Basic Access Authentication login
   - Custom implementation of [Active Record Pattern](https://en.wikipedia.org/wiki/Active_record_pattern)
     - Business objects (`User`, `Conversation`, and `Message`) can only be instantiated or mutated via methods that first query the database
